@@ -52,7 +52,7 @@ class User extends Authenticatable
     /**
      * Cek apakah user adalah admin.
      */
-    public function isAdmin(): bool
+    public function Admin(): bool
     {
         return $this->role === 'admin';
     }
@@ -60,16 +60,16 @@ class User extends Authenticatable
     /**
      * Cek apakah user adalah dokter.
      */
-    public function isDokter(): bool
+    public function dokter()
     {
-        return $this->role === 'dokter';
+        return $this->hasOne(Dokter::class, 'user_id');
     }
 
     /**
      * Cek apakah user adalah pasien.
      */
-    public function isPasien(): bool
+    public function pasien()
     {
-        return $this->role === 'pasien';
+        return $this->hasOne(Pasien::class, 'user_id');
     }
 }
