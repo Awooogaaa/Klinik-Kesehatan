@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // <-- TAMBAHKAN 'role'
     ];
 
     /**
@@ -44,5 +45,31 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // --- (OPSIONAL TAPI DISARANKAN) FUNGSI HELPER ROLE ---
+
+    /**
+     * Cek apakah user adalah admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Cek apakah user adalah dokter.
+     */
+    public function isDokter(): bool
+    {
+        return $this->role === 'dokter';
+    }
+
+    /**
+     * Cek apakah user adalah pasien.
+     */
+    public function isPasien(): bool
+    {
+        return $this->role === 'pasien';
     }
 }
