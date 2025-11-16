@@ -13,7 +13,7 @@ return new class extends Migration
             // Relasi 1-ke-1 dengan tabel users
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             
-            $table->string('no_rekam_medis')->unique()->nullable();
+            $table->unsignedBigInteger('no_rekam_medis')->unique()->nullable();
             $table->string('no_telepon')->nullable();
             $table->text('alamat')->nullable();
             $table->date('tanggal_lahir')->nullable();

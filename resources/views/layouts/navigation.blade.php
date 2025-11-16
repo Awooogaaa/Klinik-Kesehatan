@@ -21,8 +21,22 @@
                         {{ __('Obat') }}
                     </x-nav-link>
                 </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('pasiens.index')" :active="request()->routeIs('pasiens.index')">
+                        {{ __('Pasien') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
+                        {{ __('Dokter') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('rekam-medis.index')" :active="request()->routeIs('rekam-medis.index')">
+                        {{ __('Rekam Medis') }}
+                    </x-nav-link>
+                </div>
             </div>
-
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">

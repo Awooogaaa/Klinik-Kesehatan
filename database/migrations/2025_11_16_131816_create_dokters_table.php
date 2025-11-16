@@ -13,7 +13,7 @@ return new class extends Migration
             // Relasi 1-ke-1 dengan tabel users
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
-            $table->string('no_str')->unique()->comment('Nomor Surat Tanda Registrasi');
+            
             $table->string('spesialisasi');
             $table->string('no_telepon')->nullable();
             
