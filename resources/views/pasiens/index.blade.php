@@ -26,7 +26,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. RM</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Pasien</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akun Login (Email)</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Telepon</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -36,14 +36,34 @@
                                 @forelse ($pasiens as $pasien)
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $pasien->no_rekam_medis }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $pasien->user->name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $pasien->user->email }}</td>
+                                        
+                                        {{-- PERBAIKAN 1: Ambil nama dari tabel pasien, bukan user --}}
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                                            {{ $pasien->nama }}
+                                        </td>
+
+                                        {{-- PERBAIKAN 2: Cek dulu apakah pasien punya akun user --}}
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            @if($pasien->user)
+                                                <div class="flex flex-col">
+                                                    <span class="text-gray-900">{{ $pasien->user->email }}</span>
+                                                    <span class="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full w-fit mt-1">
+                                                        Terhubung
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                                    Tidak ada akun
+                                                </span>
+                                            @endif
+                                        </td>
+
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $pasien->no_telepon }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ Str::limit($pasien->alamat, 30) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ Str::limit($pasien->alamat, 20) }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <a href="{{ route('pasiens.edit', $pasien) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                             
-                                            <form action="{{ route('pasiens.destroy', $pasien) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus pasien ini? Ini akan menghapus akun loginnya juga.');">
+                                            <form action="{{ route('pasiens.destroy', $pasien) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus data pasien ini?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900 ml-4">Hapus</button>

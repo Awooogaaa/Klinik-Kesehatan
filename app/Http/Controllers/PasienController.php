@@ -35,51 +35,71 @@ class PasienController extends Controller
      */
    public function store(Request $request)
     {
-        // 1. Validasi (pastikan 'no_rekam_medis' sudah dihapus dari sini)
+        // 1. Validasi Data Pasien
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', ValidationRules\Password::defaults()],
+            'nama' => ['required', 'string', 'max:255'],
             'no_telepon' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string'],
             'tanggal_lahir' => ['required', 'date'],
             'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
+            
+            // Email tidak boleh unique, karena kita mau pakai ulang email yang sudah ada
+            'email' => ['nullable', 'string', 'email', 'max:255'], 
+            
+            // Password wajib hanya jika email belum terdaftar di sistem
+            'password' => ['nullable', 'confirmed', ValidationRules\Password::defaults()],
         ]);
 
-        $pasien = null; // Inisialisasi variabel pasien
+        DB::transaction(function () use ($request) {
+            $userId = null;
 
-        DB::transaction(function () use ($request, &$pasien) {
-            // 2. Buat data user
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'pasien',
-            ]);
+            if ($request->filled('email')) {
+                // Cek apakah email sudah ada di database?
+                $existingUser = User::where('email', $request->email)->first();
 
-            // 3. Buat data pasien
-            $pasien = $user->pasien()->create([
+                if ($existingUser) {
+                    // SKENARIO A: Akun Sudah Ada (Family Account)
+                    // Langsung sambungkan pasien ini ke user tersebut
+                    $userId = $existingUser->id;
+                } else {
+                    // SKENARIO B: Akun Belum Ada (New Account)
+                    // Buatkan user baru
+                    
+                    // Pastikan password diisi karena ini akun baru
+                    if (!$request->filled('password')) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'password' => 'Password wajib diisi untuk pembuatan akun baru.',
+                        ]);
+                    }
+
+                    $newUser = User::create([
+                        'name' => $request->nama, // Nama akun pakai nama pasien pertama
+                        'email' => $request->email,
+                        'password' => Hash::make($request->password),
+                        'role' => 'pasien',
+                    ]);
+                    $userId = $newUser->id;
+                }
+            }
+
+            // Buat Data Pasien
+            $pasien = Pasien::create([
+                'user_id' => $userId,
+                'nama' => $request->nama,
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'jenis_kelamin' => $request->jenis_kelamin,
-                // 'no_rekam_medis' masih null di sini
             ]);
 
-            // --- INI BAGIAN YANG BERUBAH ---
-            // 4. Buat No. RM otomatis (langsung pakai ID-nya sendiri)
+            // Generate No. RM
             $pasien->no_rekam_medis = $pasien->id;
             $pasien->save();
-            // ---------------------------------
         });
 
-        // Update juga pesan suksesnya
-        return redirect()->route('pasiens.index')
-                         ->with('success', 'Pasien berhasil ditambahkan. No. RM: ' . $pasien->no_rekam_medis);
+        return redirect()->route('pasiens.index')->with('success', 'Pasien berhasil ditambahkan.');
     }
-    /**
-     * Menampilkan form untuk mengedit pasien (Update).
-     */
+
     public function edit(Pasien $pasien)
     {
         // $pasien->load('user') akan mengambil data user yang terelasi
@@ -93,52 +113,84 @@ class PasienController extends Controller
      */
    public function update(Request $request, Pasien $pasien)
     {
-        // 1. Validasi (HAPUS 'no_rekam_medis' dari sini)
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($pasien->user_id)],
+            'nama' => ['required', 'string', 'max:255'],
             'no_telepon' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string'],
             'tanggal_lahir' => ['required', 'date'],
             'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
             'password' => ['nullable', 'confirmed', ValidationRules\Password::defaults()],
         ]);
 
         DB::transaction(function () use ($request, $pasien) {
-            // 2. Update data users
-            $pasien->user->update([
-                'name' => $request->name,
-                'email' => $request->email,
-            ]);
-
-            // 3. Update data pasiens (HAPUS 'no_rekam_medis' dari sini)
+            // Update Data Pasien
             $pasien->update([
+                'nama' => $request->nama,
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'jenis_kelamin' => $request->jenis_kelamin,
             ]);
 
-            // ... (Update password jika ada)
-            if ($request->filled('password')) {
-                // ...
+            // Logika Akun
+            if ($request->filled('email')) {
+                // Cek email inputan milik siapa?
+                $targetUser = User::where('email', $request->email)->first();
+
+                if ($targetUser) {
+                    // Jika email sudah ada, pindahkan pasien ini ke akun pemilik email tersebut (Gabung Keluarga)
+                    $pasien->update(['user_id' => $targetUser->id]);
+                    
+                    // Opsional: Jika ingin update password akun induk (hati-hati, ini mengubah password 1 keluarga)
+                    if ($request->filled('password')) {
+                        $targetUser->update(['password' => Hash::make($request->password)]);
+                    }
+                } else {
+                    // Jika email belum ada
+                    if ($pasien->user) {
+                        // Jika pasien punya akun lama, update email akun lamanya
+                        $pasien->user->update(['email' => $request->email]);
+                        if ($request->filled('password')) {
+                            $pasien->user->update(['password' => Hash::make($request->password)]);
+                        }
+                    } else {
+                        // Jika pasien belum punya akun sama sekali, buatkan baru
+                        $newUser = User::create([
+                            'name' => $request->nama,
+                            'email' => $request->email,
+                            'password' => Hash::make($request->password ?? 'password123'),
+                            'role' => 'pasien',
+                        ]);
+                        $pasien->update(['user_id' => $newUser->id]);
+                    }
+                }
             }
         });
 
-        return redirect()->route('pasiens.index')
-                         ->with('success', 'Data pasien berhasil diperbarui.');
+        return redirect()->route('pasiens.index')->with('success', 'Data pasien diperbarui.');
     }
     /**
      * Menghapus data pasien dari database (Delete).
      */
     public function destroy(Pasien $pasien)
     {
-        // Kita hanya perlu hapus data User.
-        // Data Pasien akan terhapus otomatis karena kita
-        // sudah setting `onDelete('cascade')` di file migrasi.
-        $pasien->user->delete();
+        // Hati-hati menghapus User, karena mungkin dipakai pasien lain (saudaranya)
+        // Jadi kita cek dulu: Apakah user ini punya pasien lain selain yang mau dihapus?
+        
+        $user = $pasien->user;
+        $pasien->delete(); // Hapus pasien target
+        
+        if ($user) {
+            // Hitung sisa pasien yang dimiliki user ini
+            $sisaPasien = Pasien::where('user_id', $user->id)->count();
+            
+            // Jika sudah tidak ada pasien lain yang nyantol, baru hapus akunnya
+            if ($sisaPasien == 0) {
+                $user->delete();
+            }
+        }
 
-        return redirect()->route('pasiens.index')
-                         ->with('success', 'Pasien berhasil dihapus.');
+        return redirect()->route('pasiens.index')->with('success', 'Data pasien dihapus.');
     }
 }

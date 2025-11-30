@@ -10,9 +10,14 @@ return new class extends Migration
     {
         Schema::create('pasiens', function (Blueprint $table) {
             $table->id();
-            // Relasi 1-ke-1 dengan tabel users
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             
+            
+            $table->foreignId('user_id')
+                  ->nullable()
+                  ->constrained('users')
+                  ->onDelete('set null');
+            
+            $table->string('nama'); 
             $table->unsignedBigInteger('no_rekam_medis')->unique()->nullable();
             $table->string('no_telepon')->nullable();
             $table->text('alamat')->nullable();
