@@ -24,29 +24,44 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Foto</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Dokter</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spesialisasi</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Telepon</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($dokters as $dokter)
                                     <tr>
-                                    
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokter->user->name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokter->spesialisasi }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokter->user->email }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $dokter->no_telepon }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if($dokter->foto)
+                                                <img src="{{ asset('storage/' . $dokter->foto) }}" alt="Foto" class="h-12 w-12 rounded-full object-cover border border-gray-300">
+                                            @else
+                                                <span class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">No img</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $dokter->user->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {{ $dokter->spesialisasi }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <div>{{ $dokter->no_telepon }}</div>
+                                            <div class="text-xs">{{ $dokter->user->email }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                            {{ $dokter->alamat }}
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="{{ route('dokters.edit', $dokter) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <a href="{{ route('dokters.edit', $dokter) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
                                             
-                                            <form action="{{ route('dokters.destroy', $dokter) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus dokter ini? Ini akan menghapus akun loginnya juga.');">
+                                            <form action="{{ route('dokters.destroy', $dokter) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus dokter ini? Akun login juga akan terhapus.');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900 ml-4">Hapus</button>
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
                                             </form>
                                         </td>
                                     </tr>
