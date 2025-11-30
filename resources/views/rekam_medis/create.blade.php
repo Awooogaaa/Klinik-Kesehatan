@@ -106,6 +106,7 @@
         </div>
     </div>
 
+    @verbatim
     <script>
         function resepForm() {
             return {
@@ -123,4 +124,5 @@
             }
         }
     </script>
+    @endverbatim
 </x-app-layout>

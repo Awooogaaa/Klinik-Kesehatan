@@ -12,10 +12,12 @@ return new class extends Migration
             $table->id();
             // Relasi 1-ke-1 dengan tabel users
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-
             
             $table->string('spesialisasi');
             $table->string('no_telepon')->nullable();
+            
+            // KOLOM BARU UNTUK FOTO (Boleh kosong/nullable)
+            $table->string('foto')->nullable(); 
             
             $table->timestamps();
         });
