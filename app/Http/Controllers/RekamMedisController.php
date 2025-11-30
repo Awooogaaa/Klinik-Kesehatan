@@ -4,60 +4,53 @@ namespace App\Http\Controllers;
 
 use App\Models\RekamMedis;
 use App\Models\Kunjungan;
+use App\Models\Obat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class RekamMedisController extends Controller
 {
-    /**
-     * Menampilkan daftar riwayat rekam medis.
-     */
     public function index()
     {
-        $rekamMedis = RekamMedis::with(['pasien', 'dokter', 'kunjungan'])
-                                ->latest()
-                                ->paginate(10);
-                                
+        // Eager load relasi yang dibutuhkan untuk tabel index
+        $rekamMedis = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan'])->latest()->paginate(10);
         return view('rekam_medis.index', compact('rekamMedis'));
     }
 
-    /**
-     * Menampilkan form pemeriksaan (membuat rekam medis baru).
-     * Hanya menampilkan Kunjungan yang statusnya 'disetujui' dan belum diperiksa.
-     */
     public function create()
     {
-        // Ambil kunjungan yang statusnya 'disetujui'
-        // DAN belum memiliki data di tabel rekam_medis (agar tidak double)
-        $kunjungans = Kunjungan::with(['pasien', 'dokter'])
+        // Ambil kunjungan yang disetujui & belum diperiksa
+        $kunjungans = Kunjungan::with(['pasien', 'dokter.user'])
             ->where('status', 'disetujui')
             ->whereDoesntHave('rekamMedis') 
             ->orderBy('waktu_kunjungan', 'asc')
             ->get();
 
-        return view('rekam_medis.create', compact('kunjungans'));
+        // Ambil data obat untuk dropdown resep
+        $obats = Obat::orderBy('nama_obat')->get();
+
+        return view('rekam_medis.create', compact('kunjungans', 'obats'));
     }
 
-    /**
-     * Menyimpan data rekam medis dan menyelesaikan kunjungan.
-     */
     public function store(Request $request)
     {
-        // Validasi input
         $request->validate([
             'kunjungan_id' => 'required|exists:kunjungans,id',
             'keluhan'      => 'required|string',
             'diagnosa'     => 'required|string',
             'tindakan'     => 'nullable|string',
+            // Validasi Array Obat
+            'obats'        => 'nullable|array',
+            'obats.*.obat_id' => 'required|exists:obats,id',
+            'obats.*.jumlah'  => 'required|integer|min:1',
+            'obats.*.dosis'   => 'required|string|max:255',
         ]);
 
         DB::transaction(function () use ($request) {
-            // 1. Cari data kunjungan berdasarkan ID yang dipilih
             $kunjungan = Kunjungan::findOrFail($request->kunjungan_id);
 
-            // 2. Simpan Rekam Medis
-            // Pasien ID dan Dokter ID diambil otomatis dari data Kunjungan
-            RekamMedis::create([
+            // 1. Simpan Rekam Medis Utama
+            $rekamMedis = RekamMedis::create([
                 'kunjungan_id' => $kunjungan->id,
                 'pasien_id'    => $kunjungan->pasien_id,
                 'dokter_id'    => $kunjungan->dokter_id,
@@ -66,63 +59,78 @@ class RekamMedisController extends Controller
                 'tindakan'     => $request->tindakan,
             ]);
 
-            // 3. Update status Kunjungan menjadi 'selesai'
+            // 2. Simpan Resep Obat (Many-to-Many)
+            if ($request->has('obats')) {
+                foreach ($request->obats as $resep) {
+                    $rekamMedis->obats()->attach($resep['obat_id'], [
+                        'jumlah' => $resep['jumlah'],
+                        'dosis'  => $resep['dosis'],
+                    ]);
+                }
+            }
+
+            // 3. Update Status Kunjungan
             $kunjungan->update(['status' => 'selesai']);
         });
 
         return redirect()->route('rekam_medis.index')
-                         ->with('success', 'Pemeriksaan selesai. Data rekam medis berhasil disimpan.');
+                         ->with('success', 'Pemeriksaan selesai dan resep obat tersimpan.');
     }
 
-    /**
-     * Menampilkan detail satu rekam medis.
-     */
-    public function show(RekamMedis $rekamMedis)
-    {
-        $rekamMedis->load(['pasien', 'dokter', 'kunjungan']);
-        return view('rekam_medis.show', compact('rekamMedis'));
-    }
-
-    /**
-     * Menampilkan form edit rekam medis.
-     */
     public function edit(RekamMedis $rekamMedis)
     {
-        // Kita tidak perlu load list pasien/dokter/kunjungan lagi
-        // karena data tersebut tidak boleh diubah (sudah terkunci dari kunjungan awal).
-        // Dokter hanya boleh mengedit diagnosa/tindakan/keluhan.
-        return view('rekam_medis.edit', compact('rekamMedis'));
+        // Load data obat yang sudah ada di resep ini
+        $rekamMedis->load(['obats', 'pasien', 'dokter.user', 'kunjungan']);
+        
+        // Ambil master data obat untuk pilihan tambahan
+        $obats = Obat::orderBy('nama_obat')->get();
+
+        return view('rekam_medis.edit', compact('rekamMedis', 'obats'));
     }
 
-    /**
-     * Mengupdate data rekam medis.
-     */
     public function update(Request $request, RekamMedis $rekamMedis)
     {
         $request->validate([
-            'keluhan'  => 'required|string',
-            'diagnosa' => 'required|string',
-            'tindakan' => 'nullable|string',
+            'keluhan'      => 'required|string',
+            'diagnosa'     => 'required|string',
+            'tindakan'     => 'nullable|string',
+            'obats'        => 'nullable|array',
+            'obats.*.obat_id' => 'required|exists:obats,id',
+            'obats.*.jumlah'  => 'required|integer|min:1',
+            'obats.*.dosis'   => 'required|string|max:255',
         ]);
-        
-        // Hanya update kolom medis, jangan ubah pasien/dokter/kunjungan_id
-        $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
-        
+
+        DB::transaction(function () use ($request, $rekamMedis) {
+            // 1. Update Data Medis
+            $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
+
+            // 2. Sync Resep Obat (Hapus yang lama, ganti yang baru sesuai input form)
+            $syncData = [];
+            if ($request->has('obats')) {
+                foreach ($request->obats as $resep) {
+                    // Format untuk sync: [obat_id => ['jumlah' => x, 'dosis' => y]]
+                    $syncData[$resep['obat_id']] = [
+                        'jumlah' => $resep['jumlah'],
+                        'dosis'  => $resep['dosis'],
+                    ];
+                }
+            }
+            $rekamMedis->obats()->sync($syncData);
+        });
+
         return redirect()->route('rekam_medis.index')
-                         ->with('success', 'Data rekam medis berhasil diperbarui.');
+                         ->with('success', 'Data rekam medis dan resep berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus data rekam medis.
-     */
+    public function show(RekamMedis $rekamMedis)
+    {
+        $rekamMedis->load(['pasien', 'dokter.user', 'obats', 'kunjungan']);
+        return view('rekam_medis.show', compact('rekamMedis'));
+    }
+
     public function destroy(RekamMedis $rekamMedis)
     {
-        // Opsional: Jika rekam medis dihapus, apakah status kunjungan dikembalikan ke 'disetujui'?
-        // Untuk saat ini kita biarkan status kunjungannya tetap 'selesai' atau bisa kita ubah manual jika perlu.
-        
         $rekamMedis->delete();
-        
-        return redirect()->route('rekam_medis.index')
-                         ->with('success', 'Rekam medis berhasil dihapus.');
+        return redirect()->route('rekam_medis.index')->with('success', 'Data dihapus.');
     }
 }

@@ -38,7 +38,7 @@
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('rekam-medis.index')" :active="request()->routeIs('rekam-medis.index')">
+                    <x-nav-link :href="route('rekam_medis.index')" :active="request()->routeIs('rekam_medis.index')">
                         {{ __('Rekam Medis') }}
                     </x-nav-link>
                 </div>

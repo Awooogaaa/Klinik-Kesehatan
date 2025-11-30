@@ -1,126 +1,96 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Rekam Medis') }}
-        </h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Edit Rekam Medis') }}</h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900" x-data="resepForm(@json($rekamMedis->obats->map(fn($o) => ['obat_id' => $o->id, 'jumlah' => $o->pivot->jumlah, 'dosis' => $o->pivot->dosis])))">
+                <div class="p-6 text-gray-900">
                     
-                    <form action="{{ route('rekam-medis.update', $rekamMedis) }}" method="POST">
+                    <form action="{{ route('rekam_medis.update', $rekamMedis) }}" method="POST"
+                          x-data="resepForm(@json($rekamMedis->obats->map(fn($o) => ['obat_id' => $o->id, 'jumlah' => $o->pivot->jumlah, 'dosis' => $o->pivot->dosis])))">
                         @csrf
                         @method('PUT')
                         
-                        <h3 class="font-semibold mb-4">Data Kunjungan</h3>
+                        <div class="bg-gray-100 p-4 rounded mb-6 grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase">Pasien</label>
+                                <p class="font-bold">{{ $rekamMedis->pasien->nama }}</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase">Dokter</label>
+                                <p class="font-bold">{{ $rekamMedis->dokter->user->name }}</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase">Tanggal Kunjungan</label>
+                                <p class="font-bold">{{ $rekamMedis->kunjungan->waktu_kunjungan->format('d M Y H:i') }}</p>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <x-input-label for="pasien_id" :value="__('Pasien')" />
-                                <select id="pasien_id" name="pasien_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    <option value="">Pilih Pasien</option>
-                                    @foreach($pasiens as $pasien)
-                                        <option value="{{ $pasien->id }}" @if(old('pasien_id', $rekamMedis->pasien_id) == $pasien->id) selected @endif>
-                                            {{ $pasien->name }} (RM: {{ $pasien->pasien->no_rekam_medis ?? 'N/A' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('pasien_id')" class="mt-2" />
+                                <x-input-label for="keluhan" :value="__('Keluhan')" />
+                                <textarea id="keluhan" name="keluhan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="4" required>{{ old('keluhan', $rekamMedis->keluhan) }}</textarea>
                             </div>
                             <div>
-                                <x-input-label for="dokter_id" :value="__('Dokter')" />
-                                <select id="dokter_id" name="dokter_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    <option value="">Pilih Dokter</option>
-                                    @foreach($dokters as $dokter)
-                                        <option value="{{ $dokter->id }}" @if(old('dokter_id', $rekamMedis->dokter_id) == $dokter->id) selected @endif>
-                                            {{ $dokter->name }} ({{ $dokter->dokter->spesialisasi ?? 'N/A' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('dokter_id')" class="mt-2" />
+                                <x-input-label for="diagnosa" :value="__('Diagnosa')" />
+                                <textarea id="diagnosa" name="diagnosa" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="4" required>{{ old('diagnosa', $rekamMedis->diagnosa) }}</textarea>
                             </div>
                         </div>
+
                         <div class="mt-4">
-                            <x-input-label for="tanggal_kunjungan" :value="__('Tanggal Kunjungan')" />
-                            <x-text-input id="tanggal_kunjungan" class="block mt-1 w-full" type="datetime-local" name="tanggal_kunjungan" :value="old('tanggal_kunjungan', $rekamMedis->tanggal_kunjungan)" required />
-                            <x-input-error :messages="$errors->get('tanggal_kunjungan')" class="mt-2" />
-                        </div>
-                        <div class="mt-4">
-                            <x-input-label for="keluhan" :value="__('Keluhan')" />
-                            <textarea id="keluhan" name="keluhan" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('keluhan', $rekamMedis->keluhan) }}</textarea>
-                            <x-input-error :messages="$errors->get('keluhan')" class="mt-2" />
-                        </div>
-                        <div class="mt-4">
-                            <x-input-label for="diagnosa" :value="__('Diagnosa')" />
-                            <textarea id="diagnosa" name="diagnosa" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('diagnosa', $rekamMedis->diagnosa) }}</textarea>
-                            <x-input-error :messages="$errors->get('diagnosa')" class="mt-2" />
-                        </div>
-                        <div class="mt-4">
-                            <x-input-label for="tindakan" :value="__('Tindakan (Opsional)')" />
-                            <textarea id="tindakan" name="tindakan" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('tindakan', $rekamMedis->tindakan) }}</textarea>
-                            <x-input-error :messages="$errors->get('tindakan')" class="mt-2" />
+                            <x-input-label for="tindakan" :value="__('Tindakan')" />
+                            <textarea id="tindakan" name="tindakan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="2">{{ old('tindakan', $rekamMedis->tindakan) }}</textarea>
                         </div>
 
-                        <h3 class="font-semibold mt-8 mb-4">Resep Obat</h3>
-                        <div class="space-y-4">
-                            <template x-for="(resep, index) in reseps" :key="'resep-' + index">
-                                <div class="flex items-end space-x-4 border p-4 rounded-md">
-                                    <div class="flex-1">
-                                        <x-input-label :value="__('Obat')" />
-                                        <select :name="'obats[' + index + '][obat_id]'" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" x-model="resep.obat_id">
-                                            <option value="">Pilih Obat</option>
-                                            @foreach($obats as $obat)
-                                                <option value="{{ $obat->id }}">{{ $obat->nama_obat }} (Stok: {{ $obat->stok }})</option>
-                                            @endforeach
-                                        </select>
+                        <div class="mt-8 border-t pt-6">
+                            <h3 class="font-bold text-lg mb-2">Resep Obat</h3>
+                            <div class="space-y-3">
+                                <template x-for="(resep, index) in reseps" :key="index">
+                                    <div class="flex gap-4 items-end bg-gray-50 p-3 rounded border">
+                                        <div class="flex-1">
+                                            <label class="text-sm text-gray-600">Nama Obat</label>
+                                            <select :name="'obats['+index+'][obat_id]'" x-model="resep.obat_id" class="block w-full border-gray-300 rounded-md text-sm" required>
+                                                <option value="">-- Pilih Obat --</option>
+                                                @foreach($obats as $obat)
+                                                    <option value="{{ $obat->id }}">{{ $obat->nama_obat }} (Stok: {{ $obat->stok }})</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="w-24">
+                                            <label class="text-sm text-gray-600">Jumlah</label>
+                                            <input type="number" :name="'obats['+index+'][jumlah]'" x-model="resep.jumlah" class="block w-full border-gray-300 rounded-md text-sm" min="1" required>
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="text-sm text-gray-600">Dosis</label>
+                                            <input type="text" :name="'obats['+index+'][dosis]'" x-model="resep.dosis" class="block w-full border-gray-300 rounded-md text-sm" required>
+                                        </div>
+                                        <button type="button" @click="removeResep(index)" class="text-red-600 hover:text-red-800 font-bold px-2">X</button>
                                     </div>
-                                    <div class="w-1/4">
-                                        <x-input-label :value="__('Jumlah')" />
-                                        <x-text-input type="number" :name="'obats[' + index + '][jumlah]'" class="block mt-1 w-full" x-model="resep.jumlah" min="1" />
-                                    </div>
-                                    <div class="flex-1">
-                                        <x-input-label :value="__('Dosis (Cth: 3x1 sehari)')" />
-                                        <x-text-input type="text" :name="'obats[' + index + '][dosis]'" class="block mt-1 w-full" x-model="resep.dosis" />
-                                    </div>
-                                    <button type="button" @@click="removeResep(index)" class="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-500">-</button>
-                                </div>
-                            </template>
+                                </template>
+                            </div>
+                            <button type="button" @click="addResep()" class="mt-3 text-sm text-blue-600 font-bold hover:underline">+ Tambah Obat</button>
                         </div>
-                        <button type="button" @@click="addResep()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500">
-    + Tambah Obat
-</button>
 
                         <div class="flex items-center justify-end mt-6">
-                            <a href="{{ route('rekam-medis.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">
-                                Batal
-                            </a>
-                            <x-primary-button>
-                                {{ __('Update') }}
-                            </x-primary-button>
+                            <a href="{{ route('rekam_medis.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">Batal</a>
+                            <x-primary-button>{{ __('Update Data') }}</x-primary-button>
                         </div>
                     </form>
+
+                    <script>
+                        function resepForm(existingReseps = []) {
+                            return {
+                                reseps: existingReseps,
+                                addResep() { this.reseps.push({ obat_id: '', jumlah: 1, dosis: '' }); },
+                                removeResep(index) { this.reseps.splice(index, 1); }
+                            }
+                        }
+                    </script>
 
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        function resepForm(existingReseps = []) {
-            return {
-                reseps: existingReseps,
-                addResep() {
-                    this.reseps.push({
-                        obat_id: '',
-                        jumlah: 1,
-                        dosis: ''
-                    });
-                },
-                removeResep(index) {
-                    this.reseps.splice(index, 1);
-                }
-            }
-        }
-    </script>
 </x-app-layout>

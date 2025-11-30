@@ -24,7 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('obats', ObatController::class);
     Route::resource('pasiens', PasienController::class);
     Route::resource('dokters', DokterController::class);
-    Route::resource('rekam-medis', RekamMedisController::class);
+    Route::resource('rekam_medis', RekamMedisController::class);
     Route::resource('kunjungans', KunjunganController::class);
 
 
