@@ -5,6 +5,7 @@ use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PasienController;
 use App\Http\Controllers\DokterController;
 use App\Http\Controllers\RekamMedisController;
+use App\Http\Controllers\KunjunganController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -24,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('pasiens', PasienController::class);
     Route::resource('dokters', DokterController::class);
     Route::resource('rekam-medis', RekamMedisController::class);
+    Route::resource('kunjungans', KunjunganController::class);
 
 
 });
