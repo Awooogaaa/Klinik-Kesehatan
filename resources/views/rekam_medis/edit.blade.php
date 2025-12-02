@@ -8,7 +8,8 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     
-                    <form action="{{ route('rekam_medis.update', $rekamMedis) }}" method="POST"
+                    {{-- PERBAIKAN: Menggunakan $rekamMedis->id agar parameter rute terbaca dengan benar --}}
+                    <form action="{{ route('rekam_medis.update', $rekamMedis->id) }}" method="POST"
                           x-data="resepForm(@json($rekamMedis->obats->map(fn($o) => ['obat_id' => $o->id, 'jumlah' => $o->pivot->jumlah, 'dosis' => $o->pivot->dosis])))">
                         @csrf
                         @method('PUT')
@@ -46,6 +47,18 @@
 
                         <div class="mt-8 border-t pt-6">
                             <h3 class="font-bold text-lg mb-2">Resep Obat</h3>
+                            
+                            {{-- Menampilkan Error Validasi Stok --}}
+                            @if($errors->any())
+                                <div class="mb-4 text-sm text-red-600">
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
                             <div class="space-y-3">
                                 <template x-for="(resep, index) in reseps" :key="index">
                                     <div class="flex gap-4 items-end bg-gray-50 p-3 rounded border">
