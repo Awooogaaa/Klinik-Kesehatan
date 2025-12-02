@@ -68,8 +68,8 @@ class User extends Authenticatable
     /**
      * Cek apakah user adalah pasien.
      */
-    public function pasien()
+    public function pasiens() 
     {
-        return $this->hasOne(Pasien::class, 'user_id');
+        return $this->hasMany(Pasien::class);
     }
 }

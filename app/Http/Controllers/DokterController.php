@@ -32,19 +32,30 @@ class DokterController extends Controller
     /**
      * Menyimpan data dokter baru ke database.
      */
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        // Validasi (no_str dihapus)
+        // 1. Validasi Input
         $request->validate([
+            // Data Akun
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', ValidationRules\Password::defaults()],
+            
+            // Data Dokter
             'spesialisasi' => ['required', 'string', 'max:255'],
             'no_telepon' => ['required', 'string', 'max:20'],
+            'alamat' => ['required', 'string'],
+            'foto' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2048'], // Wajib ada foto
         ]);
 
         DB::transaction(function () use ($request) {
-            // 1. Buat data user
+            // 2. Upload Foto
+            $fotoPath = null;
+            if ($request->hasFile('foto')) {
+                $fotoPath = $request->file('foto')->store('fotos-dokter', 'public');
+            }
+
+            // 3. Buat Akun User (Login)
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -52,15 +63,16 @@ class DokterController extends Controller
                 'role' => 'dokter',
             ]);
 
-            // 2. Buat data dokter (no_str dihapus)
+            // 4. Simpan Data Profil Dokter
             $user->dokter()->create([
                 'spesialisasi' => $request->spesialisasi,
                 'no_telepon' => $request->no_telepon,
+                'alamat' => $request->alamat,
+                'foto' => $fotoPath,
             ]);
         });
 
-        return redirect()->route('dokters.index')
-                         ->with('success', 'Dokter berhasil ditambahkan.');
+        return redirect()->route('dokters.index')->with('success', 'Dokter dan akun berhasil ditambahkan.');
     }
 
     public function edit(Dokter $dokter)
@@ -75,51 +87,64 @@ class DokterController extends Controller
    /**
      * Mengupdate data dokter di database.
      */
-    public function update(Request $request, Dokter $dokter)
+        public function update(Request $request, Dokter $dokter)
     {
-        // Validasi (no_str dihapus)
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($dokter->user_id)],
             'spesialisasi' => ['required', 'string', 'max:255'],
             'no_telepon' => ['required', 'string', 'max:20'],
+            'alamat' => ['required', 'string'],
             'password' => ['nullable', 'confirmed', ValidationRules\Password::defaults()],
+            'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ]);
 
         DB::transaction(function () use ($request, $dokter) {
-            // 1. Update data di tabel users
-            $dokter->user->update([
+            // Update User
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
-            ]);
+            ];
+            
+            if ($request->filled('password')) {
+                $userData['password'] = Hash::make($request->password);
+            }
+            
+            $dokter->user->update($userData);
 
-            // 2. Update data di tabel dokters (no_str dihapus)
-            $dokter->update([
+            // Update Data Dokter
+            $dokterData = [
                 'spesialisasi' => $request->spesialisasi,
                 'no_telepon' => $request->no_telepon,
-            ]);
+                'alamat' => $request->alamat,
+            ];
 
-            // 3. (Opsional) Update password
-            if ($request->filled('password')) {
-                $dokter->user->update([
-                    'password' => Hash::make($request->password),
-                ]);
+            // Handle Ganti Foto
+            if ($request->hasFile('foto')) {
+                // Hapus foto lama
+                if ($dokter->foto && Storage::disk('public')->exists($dokter->foto)) {
+                    Storage::disk('public')->delete($dokter->foto);
+                }
+                $dokterData['foto'] = $request->file('foto')->store('fotos-dokter', 'public');
             }
+
+            $dokter->update($dokterData);
         });
 
-        return redirect()->route('dokters.index')
-                         ->with('success', 'Data dokter berhasil diperbarui.');
+        return redirect()->route('dokters.index')->with('success', 'Data dokter diperbarui.');
     }
 
     /**
      * Menghapus data dokter dari database.
      */
-    public function destroy(Dokter $dokter)
+     public function destroy(Dokter $dokter)
     {
-        // Hapus data User, data Dokter akan terhapus otomatis via cascade
-        $dokter->user->delete();
+        if ($dokter->foto && Storage::disk('public')->exists($dokter->foto)) {
+            Storage::disk('public')->delete($dokter->foto);
+        }
+        
+        $dokter->user->delete(); // Hapus user, dokter ikut terhapus (cascade)
 
-        return redirect()->route('dokters.index')
-                         ->with('success', 'Dokter berhasil dihapus.');
+        return redirect()->route('dokters.index')->with('success', 'Dokter dihapus.');
     }
 }

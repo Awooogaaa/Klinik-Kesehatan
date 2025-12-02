@@ -10,12 +10,13 @@ return new class extends Migration
     {
         Schema::create('dokters', function (Blueprint $table) {
             $table->id();
-            // Relasi 1-ke-1 dengan tabel users
+            
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-
             
             $table->string('spesialisasi');
             $table->string('no_telepon')->nullable();
+            $table->text('alamat')->nullable(); 
+            $table->string('foto')->nullable(); 
             
             $table->timestamps();
         });
