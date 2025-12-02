@@ -3,189 +3,134 @@
 namespace App\Http\Controllers;
 
 use App\Models\RekamMedis;
-use App\Models\User;
+use App\Models\Kunjungan;
 use App\Models\Obat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class RekamMedisController extends Controller
 {
-    /**
-     * Menampilkan daftar semua rekam medis.
-     */
     public function index()
     {
-        // Eager load relasi pasien & dokter (dari tabel users)
-        $rekamMedis = RekamMedis::with(['pasien', 'dokter'])
-                                ->latest()
-                                ->paginate(10);
-                                
+        // Eager load relasi yang dibutuhkan untuk tabel index
+        $rekamMedis = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan'])->latest()->paginate(10);
         return view('rekam_medis.index', compact('rekamMedis'));
     }
 
-    /**
-     * Menampilkan form untuk membuat rekam medis baru.
-     */
     public function create()
     {
-        // Ambil semua data yang diperlukan untuk dropdown form
-        $pasiens = User::where('role', 'pasien')->get();
-        $dokters = User::where('role', 'dokter')->get();
+        // Ambil kunjungan yang disetujui & belum diperiksa
+        $kunjungans = Kunjungan::with(['pasien', 'dokter.user'])
+            ->where('status', 'disetujui')
+            ->whereDoesntHave('rekamMedis') 
+            ->orderBy('waktu_kunjungan', 'asc')
+            ->get();
+
+        // Ambil data obat untuk dropdown resep
         $obats = Obat::orderBy('nama_obat')->get();
-        
-        return view('rekam_medis.create', compact('pasiens', 'dokters', 'obats'));
+
+        return view('rekam_medis.create', compact('kunjungans', 'obats'));
     }
 
-    /**
-     * Menyimpan rekam medis baru ke database.
-     */
     public function store(Request $request)
     {
-        // Validasi data utama
         $request->validate([
-            'pasien_id' => ['required', 'exists:users,id'],
-            'dokter_id' => ['required', 'exists:users,id'],
-            'tanggal_kunjungan' => ['required', 'date'],
-            'keluhan' => ['required', 'string'],
-            'diagnosa' => ['required', 'string'],
-            'tindakan' => ['nullable', 'string'],
-            
-            // Validasi untuk resep (obats)
-            'obats' => ['nullable', 'array'],
-            'obats.*.obat_id' => ['required_with:obats', 'exists:obats,id'],
-            'obats.*.jumlah' => ['required_with:obats', 'integer', 'min:1'],
-            'obats.*.dosis' => ['required_with:obats', 'string', 'max:255'],
+            'kunjungan_id' => 'required|exists:kunjungans,id',
+            'keluhan'      => 'required|string',
+            'diagnosa'     => 'required|string',
+            'tindakan'     => 'nullable|string',
+            // Validasi Array Obat
+            'obats'        => 'nullable|array',
+            'obats.*.obat_id' => 'required|exists:obats,id',
+            'obats.*.jumlah'  => 'required|integer|min:1',
+            'obats.*.dosis'   => 'required|string|max:255',
         ]);
 
-        $rekamMedis = null;
-        
-        DB::transaction(function () use ($request, &$rekamMedis) {
-            // 1. Buat data rekam medis utama
+        DB::transaction(function () use ($request) {
+            $kunjungan = Kunjungan::findOrFail($request->kunjungan_id);
+
+            // 1. Simpan Rekam Medis Utama
             $rekamMedis = RekamMedis::create([
-                'pasien_id' => $request->pasien_id,
-                'dokter_id' => $request->dokter_id,
-                'tanggal_kunjungan' => $request->tanggal_kunjungan,
-                'keluhan' => $request->keluhan,
-                'diagnosa' => $request->diagnosa,
-                'tindakan' => $request->tindakan,
+                'kunjungan_id' => $kunjungan->id,
+                'pasien_id'    => $kunjungan->pasien_id,
+                'dokter_id'    => $kunjungan->dokter_id,
+                'keluhan'      => $request->keluhan,
+                'diagnosa'     => $request->diagnosa,
+                'tindakan'     => $request->tindakan,
             ]);
 
-            // 2. Simpan data resep (jika ada)
+            // 2. Simpan Resep Obat (Many-to-Many)
             if ($request->has('obats')) {
-                $resepData = [];
                 foreach ($request->obats as $resep) {
-                    // Siapkan data untuk tabel pivot
-                    $resepData[$resep['obat_id']] = [
+                    $rekamMedis->obats()->attach($resep['obat_id'], [
                         'jumlah' => $resep['jumlah'],
-                        'dosis' => $resep['dosis'],
-                    ];
+                        'dosis'  => $resep['dosis'],
+                    ]);
                 }
-                // attach() data ke tabel pivot (obat_rekam_medis)
-                $rekamMedis->obats()->attach($resepData);
             }
+
+            // 3. Update Status Kunjungan
+            $kunjungan->update(['status' => 'selesai']);
         });
 
-        return redirect()->route('rekam-medis.index')
-                         ->with('success', 'Rekam medis berhasil ditambahkan.');
+        return redirect()->route('rekam_medis.index')
+                         ->with('success', 'Pemeriksaan selesai dan resep obat tersimpan.');
     }
 
-    /**
-     * Menampilkan detail rekam medis.
-     */
-
-    public function show(RekamMedis $rekamMedi)  // <-- PERBAIKI INI
+    public function edit(RekamMedis $rekamMedis)
     {
-        // Eager load semua relasi (pasien, dokter, dan obats)
-        $rekamMedi->load(['pasien', 'dokter', 'obats']);
+        // Load data obat yang sudah ada di resep ini
+        $rekamMedis->load(['obats', 'pasien', 'dokter.user', 'kunjungan']);
         
-        return view('rekam_medis.show', ['rekamMedis' => $rekamMedi]);
-    }
-
-    /**
-     * Menampilkan form untuk mengedit rekam medis.
-     */
-    public function edit(RekamMedis $rekamMedi)
-    {
-        // Eager load resep obat yang sudah ada
-        $rekamMedi->load('obats');
-        
-        // Ambil data untuk dropdown
-        $pasiens = User::where('role', 'pasien')->get();
-        $dokters = User::where('role', 'dokter')->get();
+        // Ambil master data obat untuk pilihan tambahan
         $obats = Obat::orderBy('nama_obat')->get();
-        
-        return view('rekam_medis.edit', [
-            'rekamMedis' => $rekamMedi,
-            'pasiens' => $pasiens,
-            'dokters' => $dokters,
-            'obats' => $obats,
-        ]);
+
+        return view('rekam_medis.edit', compact('rekamMedis', 'obats'));
     }
 
-    /**
-     * Mengupdate data rekam medis di database.
-     */
-    public function update(Request $request, RekamMedis $rekamMedi)
+    public function update(Request $request, RekamMedis $rekamMedis)
     {
-        // Validasi
         $request->validate([
-            'pasien_id' => ['required', 'exists:users,id'],
-            'dokter_id' => ['required', 'exists:users,id'],
-            'tanggal_kunjungan' => ['required', 'date'],
-            'keluhan' => ['required', 'string'],
-            'diagnosa' => ['required', 'string'],
-            'tindakan' => ['nullable', 'string'],
-            
-            'obats' => ['nullable', 'array'],
-            'obats.*.obat_id' => ['required_with:obats', 'exists:obats,id'],
-            'obats.*.jumlah' => ['required_with:obats', 'integer', 'min:1'],
-            'obats.*.dosis' => ['required_with:obats', 'string', 'max:255'],
+            'keluhan'      => 'required|string',
+            'diagnosa'     => 'required|string',
+            'tindakan'     => 'nullable|string',
+            'obats'        => 'nullable|array',
+            'obats.*.obat_id' => 'required|exists:obats,id',
+            'obats.*.jumlah'  => 'required|integer|min:1',
+            'obats.*.dosis'   => 'required|string|max:255',
         ]);
-        
-        DB::transaction(function () use ($request, $rekamMedi) {
-            // 1. Update data rekam medis utama
-            $rekamMedi->update([
-                'pasien_id' => $request->pasien_id,
-                'dokter_id' => $request->dokter_id,
-                'tanggal_kunjungan' => $request->tanggal_kunjungan,
-                'keluhan' => $request->keluhan,
-                'diagnosa' => $request->diagnosa,
-                'tindakan' => $request->tindakan,
-            ]);
 
-            // 2. Siapkan data resep
-            $resepData = [];
+        DB::transaction(function () use ($request, $rekamMedis) {
+            // 1. Update Data Medis
+            $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
+
+            // 2. Sync Resep Obat (Hapus yang lama, ganti yang baru sesuai input form)
+            $syncData = [];
             if ($request->has('obats')) {
                 foreach ($request->obats as $resep) {
-                    $resepData[$resep['obat_id']] = [
+                    // Format untuk sync: [obat_id => ['jumlah' => x, 'dosis' => y]]
+                    $syncData[$resep['obat_id']] = [
                         'jumlah' => $resep['jumlah'],
-                        'dosis' => $resep['dosis'],
+                        'dosis'  => $resep['dosis'],
                     ];
                 }
             }
-            
-            // 3. Sinkronkan data resep
-            // sync() akan otomatis menambah, update, atau hapus
-            // data di tabel pivot sesuai $resepData.
-            $rekamMedi->obats()->sync($resepData);
+            $rekamMedis->obats()->sync($syncData);
         });
-        
-        return redirect()->route('rekam-medis.index')
-                         ->with('success', 'Rekam medis berhasil diperbarui.');
+
+        return redirect()->route('rekam_medis.index')
+                         ->with('success', 'Data rekam medis dan resep berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus rekam medis dari database.
-     */
-    public function destroy(RekamMedis $rekamMedi)
+    public function show(RekamMedis $rekamMedis)
     {
-        // Hapus data rekam medis
-        // Data di tabel pivot 'obat_rekam_medis' akan terhapus
-        // otomatis karena onDelete('cascade') di migrasi.
-        $rekamMedi->delete();
-        
-        return redirect()->route('rekam-medis.index')
-                         ->with('success', 'Rekam medis berhasil dihapus.');
+        $rekamMedis->load(['pasien', 'dokter.user', 'obats', 'kunjungan']);
+        return view('rekam_medis.show', compact('rekamMedis'));
+    }
+
+    public function destroy(RekamMedis $rekamMedis)
+    {
+        $rekamMedis->delete();
+        return redirect()->route('rekam_medis.index')->with('success', 'Data dihapus.');
     }
 }

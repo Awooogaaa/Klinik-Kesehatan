@@ -20,18 +20,18 @@ class RekamMedis extends Model
      * Relasi ke User (Pasien).
      * Satu rekam medis dimiliki oleh satu pasien.
      */
-    public function pasien(): BelongsTo
+    public function pasien()
     {
-        return $this->belongsTo(User::class, 'pasien_id');
+        return $this->belongsTo(Pasien::class);
     }
 
     /**
      * Relasi ke User (Dokter).
      * Satu rekam medis dibuat oleh satu dokter.
      */
-    public function dokter(): BelongsTo
+    public function dokter()
     {
-        return $this->belongsTo(User::class, 'dokter_id');
+        return $this->belongsTo(Dokter::class);
     }
 
     /**
@@ -42,5 +42,10 @@ class RekamMedis extends Model
     {
         return $this->belongsToMany(Obat::class, 'obat_rekam_medis')
                     ->withPivot('jumlah', 'dosis'); // Penting!
+    }
+
+    public function kunjungan()
+    {
+        return $this->belongsTo(Kunjungan::class);
     }
 }
