@@ -10,7 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     
-                    <a href="{{ route('rekam-medis.index') }}" class="text-blue-600 hover:text-blue-900 mb-4 inline-block">&larr; Kembali ke Daftar</a>
+                    <a href="{{ route('rekam_medis.index') }}" class="text-blue-600 hover:text-blue-900 mb-4 inline-block">&larr; Kembali ke Daftar</a>
 
                     <h3 class="font-semibold text-lg mb-2">Data Kunjungan</h3>
                     <div class="grid grid-cols-2 gap-4 mb-6">
@@ -65,7 +65,7 @@
                     </table>
 
                     <div class="flex items-center justify-end mt-6">
-                        <a href="{{ route('rekam-medis.edit', $rekamMedis) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring focus:ring-indigo-200 active:bg-indigo-600 disabled:opacity-25 transition">
+                        <a href="{{ route('rekam_medis.edit', $rekamMedis) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring focus:ring-indigo-200 active:bg-indigo-600 disabled:opacity-25 transition">
                             Edit
                         </a>
                     </div>

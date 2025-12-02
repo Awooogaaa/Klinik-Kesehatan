@@ -155,11 +155,17 @@ class RekamMedisController extends Controller
         }
     }
 
-    public function show(RekamMedis $rekamMedis)
-    {
-        $rekamMedis->load(['pasien', 'dokter.user', 'obats', 'kunjungan']);
-        return view('rekam_medis.show', compact('rekamMedis'));
-    }
+
+
+public function show(RekamMedis $rekam_medi) 
+{
+    // PERBAIKAN: Tambahkan '.user' pada dokter agar nama dokter terbawa
+    $rekam_medi->load(['pasien', 'dokter.user', 'kunjungan', 'obats']);
+
+    return response()->json([
+        'rekam_medis' => $rekam_medi
+    ]);
+}
 
     public function destroy($id)
     {
