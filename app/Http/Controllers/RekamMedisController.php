@@ -91,16 +91,23 @@ class RekamMedisController extends Controller
         }
     }
 
-    public function edit(RekamMedis $rekamMedis)
+    public function edit(RekamMedis $rekam_medi)
     {
+        // PERBAIKAN: Ubah argumen dari $rekamMedis menjadi $rekam_medi agar binding berhasil
+        // Lalu kita masukkan ke variabel $rekamMedis agar view tidak error
+        $rekamMedis = $rekam_medi; 
+
         $rekamMedis->load(['obats', 'pasien', 'dokter.user', 'kunjungan']);
         $obats = Obat::orderBy('nama_obat')->get();
 
         return view('rekam_medis.edit', compact('rekamMedis', 'obats'));
     }
 
-    public function update(Request $request, RekamMedis $rekamMedis)
+    public function update(Request $request, RekamMedis $rekam_medi)
     {
+        // PERBAIKAN: Ubah argumen juga di sini menjadi $rekam_medi
+        $rekamMedis = $rekam_medi;
+
         $request->validate([
             'keluhan'      => 'required|string',
             'diagnosa'     => 'required|string',
@@ -117,7 +124,6 @@ class RekamMedisController extends Controller
                 $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
 
                 // 2. KEMBALIKAN STOK LAMA (Restore Stock)
-                // Kita kembalikan dulu stok obat yang dipakai sebelumnya ke gudang
                 foreach ($rekamMedis->obats as $obatLama) {
                     $obatLama->increment('stok', $obatLama->pivot->jumlah);
                 }
@@ -126,25 +132,25 @@ class RekamMedisController extends Controller
                 $syncData = [];
                 if ($request->has('obats')) {
                     foreach ($request->obats as $resep) {
+                        // Gunakan isset untuk menghindari error undefined index jika ada input kosong
+                        if (!isset($resep['obat_id']) || !isset($resep['jumlah'])) continue;
+
                         $obat = Obat::lockForUpdate()->find($resep['obat_id']);
 
-                        // Validasi Stok Baru (Stok gudang + Stok yang baru dikembalikan tadi)
                         if (!$obat || $obat->stok < $resep['jumlah']) {
-                            throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi untuk update ini. Sisa: {$obat->stok}");
+                            throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Sisa: {$obat->stok}");
                         }
 
-                        // Kurangi Stok Baru
                         $obat->decrement('stok', $resep['jumlah']);
 
-                        // Siapkan data sync
                         $syncData[$resep['obat_id']] = [
                             'jumlah' => $resep['jumlah'],
-                            'dosis'  => $resep['dosis'],
+                            'dosis'  => $resep['dosis'] ?? '-',
                         ];
                     }
                 }
                 
-                // Sync otomatis menghapus relasi lama dan buat yang baru
+                // Sync data baru (otomatis hapus relasi lama)
                 $rekamMedis->obats()->sync($syncData);
             });
 
@@ -154,7 +160,6 @@ class RekamMedisController extends Controller
             return back()->withInput()->withErrors(['obats' => $e->getMessage()]);
         }
     }
-
 
 
 public function show(RekamMedis $rekam_medi) 
