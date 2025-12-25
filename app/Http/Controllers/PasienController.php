@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pasien;
-use App\Models\User; // <-- Import User
+use App\Models\User;
+use App\Models\Kunjungan;
+use App\Models\Dokter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <-- Import DB
-use Illuminate\Support\Facades\Hash; // <-- Import Hash
-use Illuminate\Validation\Rule; // <-- Import Rule
-use Illuminate\Validation\Rules as ValidationRules; // <-- Import ValidationRules
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules as ValidationRules;
+use Illuminate\Support\Facades\Auth;
 
 class PasienController extends Controller
 {
@@ -98,6 +101,110 @@ class PasienController extends Controller
         });
 
         return redirect()->route('pasiens.index')->with('success', 'Pasien berhasil ditambahkan.');
+    }
+
+    public function storeKunjungan(Request $request)
+    {
+        // 1. Validasi HANYA pasien_id dan keluhan (Dokter & Waktu dihapus)
+        $request->validate([
+            'pasien_id' => ['required', 'exists:pasiens,id'],
+            'keluhan_awal' => ['required', 'string'],
+        ]);
+
+        // 2. Security Check
+        $pasien = Pasien::where('id', $request->pasien_id)
+                        ->where('user_id', Auth::id())
+                        ->firstOrFail();
+
+        // 3. Simpan Kunjungan (dokter_id & waktu_kunjungan null dulu)
+        Kunjungan::create([
+            'pasien_id' => $pasien->id,
+            'dokter_id' => null,          // Biarkan null, nanti Admin yang atur
+            'waktu_kunjungan' => null,    // Biarkan null, nanti Admin yang atur jadwal
+            'keluhan_awal' => $request->keluhan_awal,
+            'status' => 'menunggu',       // Status awal menunggu konfirmasi admin
+        ]);
+
+        return redirect()->route('pasiens.landingpage')->with('success', 'Pengajuan kunjungan berhasil dikirim. Admin akan segera menentukan jadwal dan dokter untuk Anda.');
+    }
+
+    public function storeKeluarga(Request $request)
+    {
+        $request->validate([
+            'nama' => ['required', 'string', 'max:255'],
+            'no_telepon' => ['required', 'string', 'max:20'],
+            'alamat' => ['required', 'string'],
+            'tanggal_lahir' => ['required', 'date'],
+            'jenis_kelamin' => ['required', \Illuminate\Validation\Rule::in(['Laki-laki', 'Perempuan'])],
+        ]);
+
+        DB::transaction(function () use ($request) {
+            $pasien = Pasien::create([
+                'user_id' => Auth::id(), // Link otomatis ke akun yang sedang login
+                'nama' => $request->nama,
+                'no_telepon' => $request->no_telepon,
+                'alamat' => $request->alamat,
+                'tanggal_lahir' => $request->tanggal_lahir,
+                'jenis_kelamin' => $request->jenis_kelamin,
+            ]);
+
+            // Generate No. RM (Sederhana: pakai ID)
+            $pasien->no_rekam_medis = $pasien->id;
+            $pasien->save();
+        });
+
+        return redirect()->route('pasiens.landingpage')->with('success', 'Anggota keluarga berhasil ditambahkan.');
+    }
+
+   public function landingpage() 
+{
+    $user = Auth::user();
+    $keluarga = Pasien::where('user_id', $user->id)->get();
+    $keluargaIds = $keluarga->pluck('id');
+
+    // Eager Load diperbaiki: 'dokter.user' agar bisa ambil nama dari tabel users jika perlu
+    $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.obats']) 
+                ->whereIn('pasien_id', $keluargaIds)
+                ->latest()
+                ->get();
+
+    return view('pasiens.landingpage', compact('keluarga', 'riwayat'));
+}
+
+    public function nota($id)
+    {
+        // Ambil data kunjungan berdasarkan ID
+        $kunjungan = Kunjungan::with(['pasien', 'dokter.user', 'rekamMedis.obats'])->findOrFail($id);
+
+        // Security: Pastikan yang melihat nota adalah pemilik pasien
+        if ($kunjungan->pasien->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak berhak melihat nota ini.');
+        }
+
+        // Cek apakah rekam medis sudah ada
+        if (!$kunjungan->rekamMedis) {
+            return back()->with('error', 'Rekam medis belum tersedia.');
+        }
+
+        return view('pasiens.nota', compact('kunjungan'));
+    }
+
+    public function destroyKunjungan(Kunjungan $kunjungan)
+    {
+        // 1. Cek apakah yang menghapus adalah pemilik pasien tersebut (Security)
+        if ($kunjungan->pasien->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // 2. Cek apakah jadwal sudah diatur (status bukan menunggu)
+        if ($kunjungan->status !== 'menunggu') {
+            return back()->with('error', 'Kunjungan tidak bisa dihapus karena jadwal sudah diatur oleh admin.');
+        }
+
+        // 3. Hapus
+        $kunjungan->delete();
+
+        return back()->with('success', 'Pengajuan kunjungan berhasil dibatalkan.');
     }
 
     public function edit(Pasien $pasien)

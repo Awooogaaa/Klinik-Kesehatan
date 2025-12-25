@@ -27,6 +27,16 @@ Route::middleware('auth')->group(function () {
     Route::resource('rekam_medis', RekamMedisController::class);
     Route::resource('kunjungans', KunjunganController::class);
 
+    Route::middleware('auth')->group(function () {
+   
+    Route::get('/landingpage-pasien', [PasienController::class, 'landingpage'])->name('pasiens.landingpage');
+    Route::post('/landingpage-pasien/keluarga', [PasienController::class, 'storeKeluarga'])->name('pasiens.storeKeluarga');
+    Route::post('/landingpage-pasien/kunjungan', [PasienController::class, 'storeKunjungan'])->name('pasiens.storeKunjungan');
+    Route::delete('/landingpage-pasien/kunjungan/{kunjungan}', [PasienController::class, 'destroyKunjungan'])->name('pasiens.destroyKunjungan');
+
+    Route::get('/landingpage-pasien/nota/{id}', [PasienController::class, 'nota'])->name('pasiens.nota');
+});
+
 
 });
 

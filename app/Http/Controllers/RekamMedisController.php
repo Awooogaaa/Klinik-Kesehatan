@@ -103,10 +103,10 @@ class RekamMedisController extends Controller
         return view('rekam_medis.edit', compact('rekamMedis', 'obats'));
     }
 
-    public function update(Request $request, RekamMedis $rekam_medi)
+    public function update(Request $request, $id)
     {
-        // PERBAIKAN: Ubah argumen juga di sini menjadi $rekam_medi
-        $rekamMedis = $rekam_medi;
+        // 1. Cari manual menggunakan ID agar lebih aman dan pasti dapat datanya
+        $rekamMedis = RekamMedis::findOrFail($id);
 
         $request->validate([
             'keluhan'      => 'required|string',
@@ -120,41 +120,61 @@ class RekamMedisController extends Controller
 
         try {
             DB::transaction(function () use ($request, $rekamMedis) {
-                // 1. Update Data Medis Dasar
+                // Update Data Medis Dasar
                 $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
 
-                // 2. KEMBALIKAN STOK LAMA (Restore Stock)
-                foreach ($rekamMedis->obats as $obatLama) {
+                // --- LOGIKA PERBAIKAN STOK & SYNC ---
+                
+                // A. Ambil data obat lama yang tersimpan di database SEKARANG
+                // Kita load fresh untuk memastikan data akurat sebelum diotak-atik
+                $oldObats = $rekamMedis->obats()->get();
+
+                // B. KEMBALIKAN STOK LAMA (Restore Stock)
+                // Kembalikan stok obat ke inventory seolah-olah transaksi dibatalkan dulu
+                foreach ($oldObats as $obatLama) {
                     $obatLama->increment('stok', $obatLama->pivot->jumlah);
                 }
 
-                // 3. KURANGI STOK BARU & SYNC
+                // C. PROSES OBAT BARU DARI INPUT FORM
                 $syncData = [];
-                if ($request->has('obats')) {
+                
+                // Cek apakah ada input 'obats' dan pastikan isinya array
+                if ($request->filled('obats') && is_array($request->obats)) {
+                    
                     foreach ($request->obats as $resep) {
-                        // Gunakan isset untuk menghindari error undefined index jika ada input kosong
-                        if (!isset($resep['obat_id']) || !isset($resep['jumlah'])) continue;
+                        // Skip jika data tidak lengkap (baris kosong)
+                        if (empty($resep['obat_id']) || empty($resep['jumlah'])) continue;
 
                         $obat = Obat::lockForUpdate()->find($resep['obat_id']);
+                        $jumlahBaru = (int) $resep['jumlah'];
 
-                        if (!$obat || $obat->stok < $resep['jumlah']) {
-                            throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Sisa: {$obat->stok}");
+                        // D. VALIDASI STOK
+                        // Karena stok lama sudah dikembalikan di langkah (B), 
+                        // maka $obat->stok sekarang adalah (Stok Sisa + Stok yang dipakai pasien ini sebelumnya).
+                        // Jadi kita tinggal cek apakah cukup untuk permintaan baru.
+                        if (!$obat || $obat->stok < $jumlahBaru) {
+                            throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Tersedia: {$obat->stok}");
                         }
 
-                        $obat->decrement('stok', $resep['jumlah']);
+                        // E. KURANGI STOK SESUAI INPUT BARU
+                        $obat->decrement('stok', $jumlahBaru);
 
+                        // Siapkan data untuk disinkronisasi
                         $syncData[$resep['obat_id']] = [
-                            'jumlah' => $resep['jumlah'],
+                            'jumlah' => $jumlahBaru,
                             'dosis'  => $resep['dosis'] ?? '-',
                         ];
                     }
                 }
-                
-                // Sync data baru (otomatis hapus relasi lama)
+
+                // F. SYNC (HAPUS LAMA, MASUKKAN BARU)
+                // Jika $syncData kosong (misal semua obat dihapus di form), 
+                // maka semua relasi obat di rekam medis ini akan dihapus (benar secara logika).
+                // Jika tidak diubah, $syncData akan berisi data yang sama dengan sebelumnya.
                 $rekamMedis->obats()->sync($syncData);
             });
 
-            return redirect()->route('rekam_medis.index')->with('success', 'Rekam medis diperbarui. Stok obat disesuaikan.');
+            return redirect()->route('rekam_medis.index')->with('success', 'Rekam medis berhasil diperbarui.');
 
         } catch (\Exception $e) {
             return back()->withInput()->withErrors(['obats' => $e->getMessage()]);
