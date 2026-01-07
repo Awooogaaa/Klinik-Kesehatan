@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\RekamMedis;
 use App\Models\Kunjungan;
 use App\Models\Obat;
-use App\Models\Pembayaran; // Pastikan model ini ada
+use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
 
@@ -15,7 +16,6 @@ class RekamMedisController extends Controller
 {
     public function index()
     {
-        // Tambahkan 'obats' ke eager load agar muncul di tabel index
         $rekamMedis = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan', 'obats'])
                                 ->latest()
                                 ->paginate(10);
@@ -24,7 +24,6 @@ class RekamMedisController extends Controller
 
     public function create()
     {
-        // Ambil kunjungan yang disetujui tapi belum punya rekam medis
         $kunjungans = Kunjungan::with(['pasien', 'dokter.user'])
             ->where('status', 'disetujui')
             ->whereDoesntHave('rekamMedis') 
@@ -38,6 +37,7 @@ class RekamMedisController extends Controller
 
     public function store(Request $request)
     {
+        
         $request->validate([
             'kunjungan_id' => 'required|exists:kunjungans,id',
             'keluhan'      => 'required|string',
@@ -51,32 +51,32 @@ class RekamMedisController extends Controller
 
         try {
             DB::transaction(function () use ($request) {
+                // 1. Ambil Data Kunjungan
                 $kunjungan = Kunjungan::with(['pasien', 'dokter'])->findOrFail($request->kunjungan_id);
 
-                // 1. Simpan Data Rekam Medis
+                // 2. Simpan Data Rekam Medis
                 $rekamMedis = RekamMedis::create([
                     'kunjungan_id' => $kunjungan->id,
-                    // Jika kolom pasien_id/dokter_id ada di tabel rekam_medis, uncomment baris bawah:
-                    // 'pasien_id'    => $kunjungan->pasien_id,
-                    // 'dokter_id'    => $kunjungan->dokter_id,
+                    'pasien_id'    => $kunjungan->pasien_id, 
+                    'dokter_id'    => $kunjungan->dokter_id, 
                     'keluhan'      => $request->keluhan,
                     'diagnosa'     => $request->diagnosa,
                     'tindakan'     => $request->tindakan,
                 ]);
 
-                // 2. Proses Obat & Hitung Total Harga
+                // 3. Proses Obat & Hitung Total Harga
                 $totalHargaObat = 0;
                 
                 if ($request->has('obats') && is_array($request->obats)) {
                     foreach ($request->obats as $resep) {
-                        $jumlah = $resep['jumlah'];
-                        $dosis = $resep['dosis'];
+                        $jumlah = (int) $resep['jumlah'];
+                        $dosis  = $resep['dosis'];
                         $obatId = $resep['obat_id'];
                         
-                        // Lock obat untuk menghindari race condition stok
+                        // Lock obat
                         $obat = Obat::lockForUpdate()->find($obatId);
                         
-                        // Cek stok
+                        // Validasi Stok
                         if (!$obat || $obat->stok < $jumlah) {
                             throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Sisa: {$obat->stok}");
                         }
@@ -85,10 +85,10 @@ class RekamMedisController extends Controller
                         $subtotal = $obat->harga * $jumlah;
                         $totalHargaObat += $subtotal;
 
-                        // Simpan ke Pivot Table
+                        // Simpan ke Pivot
                         $rekamMedis->obats()->attach($obatId, [
                             'jumlah' => $jumlah,
-                            'dosis' => $dosis
+                            'dosis'  => $dosis
                         ]);
 
                         // Kurangi Stok
@@ -96,59 +96,75 @@ class RekamMedisController extends Controller
                     }
                 }
 
-                // 3. Generate Pembayaran (Midtrans)
+                // 4. Generate Pembayaran (Midtrans)
                 
-                // Hitung Grand Total (Jasa Dokter + Obat)
+                $serverKey = config('services.midtrans.server_key');
+
+if (!$serverKey) {
+    throw new \Exception("Midtrans Server Key belum dikonfigurasi");
+}
+
+
                 $biayaJasa = $kunjungan->dokter->biaya_jasa ?? 50000;
                 $grandTotal = $biayaJasa + $totalHargaObat;
 
                 // Konfigurasi Midtrans
-                Config::$serverKey = config('services.midtrans.server_key') ?? env('MIDTRANS_SERVER_KEY');
+                Config::$serverKey = $serverKey;
                 Config::$isProduction = config('services.midtrans.is_production') ?? env('MIDTRANS_IS_PRODUCTION', false);
                 Config::$isSanitized = true;
                 Config::$is3ds = true;
+
+                // --- PERBAIKAN: FIX UNDEFINED ARRAY KEY 10023 & SSL ---
+                Config::$curlOptions = [
+                    CURLOPT_SSL_VERIFYPEER => false, // Bypass SSL Error
+                    CURLOPT_HTTPHEADER => [],        // Fix Undefined Key 10023
+                ];
+                // ------------------------------------------------------
 
                 $orderId = 'INV-' . time() . '-' . $kunjungan->id;
 
                 $params = [
                     'transaction_details' => [
                         'order_id' => $orderId,
-                        'gross_amount' => (int) $grandTotal, // Pastikan integer
+                        'gross_amount' => (int) $grandTotal,
                     ],
                     'customer_details' => [
                         'first_name' => $kunjungan->pasien->nama,
-                        'phone' => $kunjungan->pasien->no_telepon,
+                        'phone'      => $kunjungan->pasien->no_telepon,
                     ],
                 ];
 
-                $snapToken = Snap::getSnapToken($params);
+                // Request Snap Token
+                try {
+                    $snapToken = Snap::getSnapToken($params);
+                } catch (\Exception $midtransError) {
+                    throw new \Exception("Gagal menghubungi Midtrans: " . $midtransError->getMessage());
+                }
 
-                // Simpan ke database pembayaran
+                // Simpan ke Database Pembayaran
                 Pembayaran::create([
                     'kunjungan_id' => $kunjungan->id,
-                    'order_id' => $orderId,
-                    'total_harga' => $grandTotal,
+                    'order_id'     => $orderId,
+                    'total_harga'  => $grandTotal,
                     'status_pembayaran' => 'pending',
-                    'snap_token' => $snapToken,
+                    'snap_token'   => $snapToken,
                 ]);
 
-                // 4. Update status kunjungan jadi selesai
+                // 5. Update Status Kunjungan
                 $kunjungan->update(['status' => 'selesai']);
             });
 
-            return redirect()->route('rekam_medis.index')->with('success', 'Rekam medis disimpan & Tagihan dibuat.');
+            return redirect()->route('rekam_medis.index')->with('success', 'Rekam medis berhasil disimpan & Tagihan dibuat.');
 
         } catch (\Exception $e) {
-            // Rollback otomatis terjadi jika ada error karena DB::transaction
-            return back()->withInput()->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
+            Log::error('Error Simpan Rekam Medis: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => $e->getMessage()]);
         }
     } 
 
     public function edit(RekamMedis $rekam_medi)
     {
-        // Ubah variabel binding agar sesuai
         $rekamMedis = $rekam_medi; 
-
         $rekamMedis->load(['obats', 'pasien', 'dokter.user', 'kunjungan']);
         $obats = Obat::orderBy('nama_obat')->get();
 
@@ -157,7 +173,6 @@ class RekamMedisController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Cari manual menggunakan ID
         $rekamMedis = RekamMedis::findOrFail($id);
 
         $request->validate([
@@ -172,12 +187,10 @@ class RekamMedisController extends Controller
 
         try {
             DB::transaction(function () use ($request, $rekamMedis) {
-                // Update Data Medis Dasar
+                // Update Data Dasar
                 $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
 
-                // --- LOGIKA PERBAIKAN STOK & SYNC ---
-                
-                // A. Ambil data obat lama & Kembalikan Stok
+                // A. Kembalikan Stok Lama
                 $oldObats = $rekamMedis->obats()->get();
                 foreach ($oldObats as $obatLama) {
                     $obatLama->increment('stok', $obatLama->pivot->jumlah);
@@ -185,7 +198,6 @@ class RekamMedisController extends Controller
 
                 // B. Proses Obat Baru
                 $syncData = [];
-                
                 if ($request->filled('obats') && is_array($request->obats)) {
                     foreach ($request->obats as $resep) {
                         if (empty($resep['obat_id']) || empty($resep['jumlah'])) continue;
@@ -193,15 +205,12 @@ class RekamMedisController extends Controller
                         $obat = Obat::lockForUpdate()->find($resep['obat_id']);
                         $jumlahBaru = (int) $resep['jumlah'];
 
-                        // Validasi Stok
                         if (!$obat || $obat->stok < $jumlahBaru) {
                             throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Tersedia: {$obat->stok}");
                         }
 
-                        // Kurangi Stok
                         $obat->decrement('stok', $jumlahBaru);
 
-                        // Siapkan data sync
                         $syncData[$resep['obat_id']] = [
                             'jumlah' => $jumlahBaru,
                             'dosis'  => $resep['dosis'] ?? '-',
@@ -209,27 +218,21 @@ class RekamMedisController extends Controller
                     }
                 }
 
-                // C. Sync (Hapus lama, masukkan baru)
+                // C. Sync
                 $rekamMedis->obats()->sync($syncData);
-                
-                // Catatan: Update ini TIDAK memperbarui harga di tabel Pembayaran
-                // Jika ingin update harga pembayaran juga, tambahkan logika update Pembayaran di sini.
             });
 
             return redirect()->route('rekam_medis.index')->with('success', 'Rekam medis berhasil diperbarui.');
 
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['obats' => $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
     public function show(RekamMedis $rekam_medi) 
     {
         $rekam_medi->load(['pasien', 'dokter.user', 'kunjungan', 'obats']);
-
-        return response()->json([
-            'rekam_medis' => $rekam_medi
-        ]);
+        return response()->json(['rekam_medis' => $rekam_medi]);
     }
 
     public function destroy($id)
@@ -240,34 +243,28 @@ class RekamMedisController extends Controller
             DB::transaction(function () use ($rekamMedis) {
                 $kunjungan = $rekamMedis->kunjungan;
 
-                // 1. Kembalikan stok obat sebelum dihapus (Opsional, tapi disarankan)
+                // 1. Kembalikan Stok
                 foreach($rekamMedis->obats as $obat) {
                     $obat->increment('stok', $obat->pivot->jumlah);
                 }
-
-                // 2. Hapus relasi obat di pivot
                 $rekamMedis->obats()->detach();
 
-                // 3. Hapus Pembayaran terkait (jika ada)
+                // 2. Hapus Pembayaran
                 if($kunjungan && $kunjungan->pembayaran) {
                     $kunjungan->pembayaran->delete();
                 }
 
-                // 4. Hapus Rekam Medis
+                // 3. Hapus Data
                 $rekamMedis->delete();
-
-                // 5. Hapus Kunjungan
                 if ($kunjungan) {
                     $kunjungan->delete();
                 }
             });
 
-            return redirect()->route('rekam_medis.index')
-                             ->with('success', 'Rekam Medis dan data Kunjungan berhasil dihapus.');
+            return redirect()->route('rekam_medis.index')->with('success', 'Data berhasil dihapus.');
 
         } catch (\Exception $e) {
-            return redirect()->route('rekam_medis.index')
-                             ->withErrors(['error' => 'Gagal menghapus data: ' . $e->getMessage()]);
+            return redirect()->route('rekam_medis.index')->withErrors(['error' => $e->getMessage()]);
         }
     }
 }

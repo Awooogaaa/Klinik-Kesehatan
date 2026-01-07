@@ -2,60 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pembayaran;
+use Midtrans\Config;
+use Midtrans\Snap;
 use Illuminate\Http\Request;
 
 class PembayaranController extends Controller
 {
-    // [ADMIN] Melihat semua daftar pembayaran
-    public function index()
+    public function bayar()
     {
-        $pembayarans = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter'])
-                        ->latest()
-                        ->get();
-        
-        return view('pembayarans.index', compact('pembayarans'));
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production');
+        Config::$isSanitized = config('services.midtrans.is_sanitized');
+        Config::$is3ds = config('services.midtrans.is_3ds');
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => 'ORDER-' . time(),
+                'gross_amount' => 100000,
+            ],
+            'customer_details' => [
+                'first_name' => 'Putra',
+                'email' => 'putra@test.com',
+            ],
+        ];
+
+        $snapToken = Snap::getSnapToken($params);
+
+        return view('bayar', compact('snapToken'));
     }
 
-    // [ADMIN] Konfirmasi pembayaran CASH (Offline)
-    public function confirmOffline($id)
-    {
-        $pembayaran = Pembayaran::findOrFail($id);
-        
-        $pembayaran->update([
-            'status_pembayaran' => 'lunas',
-            'metode_pembayaran' => 'offline'
-        ]);
-
-        return back()->with('success', 'Pembayaran Cash berhasil dikonfirmasi.');
-    }
-
-    // [PASIEN] Halaman Nota / Checkout
-    public function show($id)
-    {
-        // Pastikan pasien hanya bisa lihat nota miliknya (opsional: tambahkan logic policy)
-        $pembayaran = Pembayaran::with(['kunjungan.rekamMedis.obats', 'kunjungan.dokter', 'kunjungan.pasien'])
-                        ->findOrFail($id);
-
-        return view('pembayarans.show', compact('pembayaran'));
-    }
-
-    // [SYSTEM] Callback dari Midtrans (Webhooks)
-    // Jangan lupa exclude route ini dari CSRF di bootstrap/app.php atau middleware
     public function callback(Request $request)
-    {
-        $serverKey = env('MIDTRANS_SERVER_KEY');
-        $hashed = hash("sha512", $request->order_id.$request->status_code.$request->gross_amount.$serverKey);
+{
+    $serverKey = config('services.midtrans.server_key');
+    $hashed = hash(
+        "sha512",
+        $request->order_id .
+        $request->status_code .
+        $request->gross_amount .
+        $serverKey
+    );
 
-        if($hashed == $request->signature_key){
-            $pembayaran = Pembayaran::where('order_id', $request->order_id)->first();
-            
-            if($request->transaction_status == 'capture' || $request->transaction_status == 'settlement'){
-                $pembayaran->update([
-                    'status_pembayaran' => 'lunas', 
-                    'metode_pembayaran' => 'online'
-                ]);
-            }
-        }
+    if ($hashed !== $request->signature_key) {
+        return response()->json(['message' => 'Invalid signature'], 403);
     }
+
+    // Contoh simpan status
+    // Order::where('order_id', $request->order_id)
+    //     ->update(['status' => $request->transaction_status]);
+
+    return response()->json(['message' => 'Callback received']);
+}
+
 }

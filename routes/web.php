@@ -18,8 +18,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/test-midtrans', [\App\Http\Controllers\TestMidtransController::class, 'index']);
+
+
 // Untuk Callback Midtrans (Harus diluar middleware auth & csrf)
 Route::post('/midtrans/callback', [PembayaranController::class, 'callback']);
+Route::get('/bayar', [PembayaranController::class, 'bayar']);
+
 
 // Group Auth
 Route::middleware('auth')->group(function () {

@@ -8,6 +8,23 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     
+                    {{-- 1. ERROR DITAMPILKAN DI SINI (SEBELUM FORM) --}}
+                    @if ($errors->any())
+                        <div class="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg relative shadow-sm" role="alert">
+                            <strong class="font-bold flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Terjadi Kesalahan!
+                            </strong>
+                            <ul class="mt-2 list-disc list-inside text-sm">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     @if($kunjungans->isEmpty())
                         <div class="bg-yellow-50 p-4 rounded text-yellow-700">
                             Tidak ada antrian pasien (Status: Disetujui). Silakan atur jadwal kunjungan dulu.
@@ -18,10 +35,10 @@
                             
                             <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <x-input-label for="kunjungan_id" :value="__('Pilih Antrian Pasien')" />
-                                <select name="kunjungan_id" id="kunjungan_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required onchange="fillKeluhan()">
+                                <select name="kunjungan_id" id="kunjungan_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" required onchange="fillKeluhan()">
                                     <option value="">-- Pilih --</option>
                                     @foreach($kunjungans as $k)
-                                        <option value="{{ $k->id }}" data-keluhan="{{ $k->keluhan_awal }}">
+                                        <option value="{{ $k->id }}" data-keluhan="{{ $k->keluhan_awal }}" {{ old('kunjungan_id') == $k->id ? 'selected' : '' }}>
                                             Jam {{ $k->waktu_kunjungan->format('H:i') }} - {{ $k->pasien->nama }} (Dr. {{ $k->dokter->user->name }})
                                         </option>
                                     @endforeach
@@ -31,17 +48,17 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <x-input-label for="keluhan" :value="__('Keluhan Pasien')" />
-                                    <textarea id="keluhan" name="keluhan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="4" required></textarea>
+                                    <textarea id="keluhan" name="keluhan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" rows="4" required>{{ old('keluhan') }}</textarea>
                                 </div>
                                 <div>
                                     <x-input-label for="diagnosa" :value="__('Diagnosa Dokter')" />
-                                    <textarea id="diagnosa" name="diagnosa" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="4" required></textarea>
+                                    <textarea id="diagnosa" name="diagnosa" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" rows="4" required>{{ old('diagnosa') }}</textarea>
                                 </div>
                             </div>
 
                             <div class="mt-4">
                                 <x-input-label for="tindakan" :value="__('Tindakan Medis')" />
-                                <textarea id="tindakan" name="tindakan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="2"></textarea>
+                                <textarea id="tindakan" name="tindakan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" rows="2">{{ old('tindakan') }}</textarea>
                             </div>
 
                             <div class="mt-8 border-t pt-6">
@@ -78,6 +95,7 @@
                             </div>
                         </form>
 
+                        {{-- 2. SCRIPT JAVASCRIPT BERSIH DARI HTML --}}
                         <script>
                             function fillKeluhan() {
                                 var select = document.getElementById('kunjungan_id');
@@ -87,7 +105,7 @@
 
                             function resepForm() {
                                 return {
-                                    reseps: [],
+                                    reseps: [], // Bisa diisi default jika perlu
                                     addResep() { this.reseps.push({ obat_id: '', jumlah: 1, dosis: '' }); },
                                     removeResep(index) { this.reseps.splice(index, 1); }
                                 }
