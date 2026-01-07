@@ -9,27 +9,32 @@ use Illuminate\Http\Request;
 class PembayaranController extends Controller
 {
     public function bayar()
-    {
-        Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized = config('services.midtrans.is_sanitized');
-        Config::$is3ds = config('services.midtrans.is_3ds');
+{
+    Config::$serverKey = config('services.midtrans.server_key');
+    Config::$isProduction = config('services.midtrans.is_production');
+    Config::$isSanitized = config('services.midtrans.is_sanitized');
+    Config::$is3ds = config('services.midtrans.is_3ds');
 
-        $params = [
-            'transaction_details' => [
-                'order_id' => 'ORDER-' . time(),
-                'gross_amount' => 100000,
-            ],
-            'customer_details' => [
-                'first_name' => 'Putra',
-                'email' => 'putra@test.com',
-            ],
-        ];
+    // TAMBAHKAN KODE INI UNTUK MEMPERBAIKI ERROR "Undefined array key 10023"
+    Config::$curlOptions = [
+        CURLOPT_HTTPHEADER => [], // Key 10023 didefinisikan sebagai array kosong
+    ];
 
-        $snapToken = Snap::getSnapToken($params);
+    $params = [
+        'transaction_details' => [
+            'order_id' => 'ORDER-' . time(),
+            'gross_amount' => 100000,
+        ],
+        'customer_details' => [
+            'first_name' => 'Putra',
+            'email' => 'putra@test.com',
+        ],
+    ];
 
-        return view('bayar', compact('snapToken'));
-    }
+    $snapToken = Snap::getSnapToken($params);
+
+    return view('bayar', compact('snapToken'));
+}
 
     public function callback(Request $request)
 {
