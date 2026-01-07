@@ -29,4 +29,10 @@ class Kunjungan extends Model
     {
         return $this->hasOne(RekamMedis::class);
     }
+
+    public function pembayaran()
+    {
+    return $this->hasOne(Pembayaran::class);
+    }
+
 }

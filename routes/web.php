@@ -6,6 +6,7 @@ use App\Http\Controllers\PasienController;
 use App\Http\Controllers\DokterController;
 use App\Http\Controllers\RekamMedisController;
 use App\Http\Controllers\KunjunganController;
+use App\Http\Controllers\PembayaranController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Obat;
@@ -15,6 +16,23 @@ use Carbon\Carbon;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// Untuk Callback Midtrans (Harus diluar middleware auth & csrf)
+Route::post('/midtrans/callback', [PembayaranController::class, 'callback']);
+
+// Group Auth
+Route::middleware('auth')->group(function () {
+    
+    // Route untuk Pasien (Lihat Nota)
+    Route::get('/pembayaran/{id}', [PembayaranController::class, 'show'])->name('pembayarans.show');
+
+    // Group Khusus Admin
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/pembayarans', [PembayaranController::class, 'index'])->name('pembayarans.index');
+        Route::post('/admin/pembayarans/{id}/confirm', [PembayaranController::class, 'confirmOffline'])->name('pembayarans.confirmOffline');
+    });
+
 });
 
 // Group Auth Umum
