@@ -38,7 +38,7 @@ class AuthenticatedSessionController extends Controller
 
         // 2. Jika Admin -> Dashboard Admin
         if ($role === 'admin') {
-            return redirect()->intended(route('admindashboard', absolute: false));
+            return redirect()->intended(route('admin-dashboard', absolute: false));
         }
 
         // 3. Jika Dokter -> Dashboard Dokter

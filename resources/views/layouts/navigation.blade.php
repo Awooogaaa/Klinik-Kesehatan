@@ -3,54 +3,67 @@
         <div class="flex justify-between h-16">
             <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ Auth::user()->role === 'admin' ? route('admin-dashboard') : route('dokter-dashboard') }}">
+                    <a href="{{ Auth::user()->role === 'admin' ? route('admin-dashboard') : (Auth::user()->role === 'dokter' ? route('dokter-dashboard') : route('pasiens.landingpage')) }}">
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
 
-                @if(Auth::user()->role === 'admin')
+                {{-- KHUSUS PASIEN --}}
+                @if(Auth::user()->role === 'pasien')
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        <x-nav-link :href="route('admin-dashboard')" :active="request()->routeIs('admin-dashboard')">
-                            {{ __('Dashboard Admin') }}
+                        {{-- Menggunakan route landingpage ditambah fragment #riwayat-medis --}}
+                        <x-nav-link :href="route('pasiens.landingpage') . '#riwayat-medis'" :active="request()->routeIs('pasiens.landingpage')">
+                            {{ __('Kunjungan & Rekam Medis') }}
                         </x-nav-link>
                     </div>
-                @elseif(Auth::user()->role === 'dokter')
+                
+                {{-- KHUSUS ADMIN & DOKTER --}}
+                @else 
+                    @if(Auth::user()->role === 'admin')
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('admin-dashboard')" :active="request()->routeIs('admin-dashboard')">
+                                {{ __('Dashboard Admin') }}
+                            </x-nav-link>
+                        </div>
+                    @elseif(Auth::user()->role === 'dokter')
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('dokter-dashboard')" :active="request()->routeIs('dokter-dashboard')">
+                                {{ __('Dashboard Dokter') }}
+                            </x-nav-link>
+                        </div>
+                    @endif
+                    
+
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        <x-nav-link :href="route('dokter-dashboard')" :active="request()->routeIs('dokter-dashboard')">
-                            {{ __('Dashboard Dokter') }}
+                        <x-nav-link :href="route('obats.index')" :active="request()->routeIs('obats.index')">
+                            {{ __('Obat') }}
                         </x-nav-link>
                     </div>
-                @endif
 
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('obats.index')" :active="request()->routeIs('obats.index')">
-                        {{ __('Obat') }}
-                    </x-nav-link>
-                </div>
-
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('kunjungans.index')" :active="request()->routeIs('kunjungans.index')">
-                        {{ __('Kunjungan') }}
-                    </x-nav-link>
-                </div>
-
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('rekam_medis.index')" :active="request()->routeIs('rekam_medis.index')">
-                        {{ __('Rekam Medis') }}
-                    </x-nav-link>
-                </div>
-
-                @if(Auth::user()->role === 'admin')
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        <x-nav-link :href="route('pasiens.index')" :active="request()->routeIs('pasiens.index')">
-                            {{ __('Pasien') }}
+                        <x-nav-link :href="route('kunjungans.index')" :active="request()->routeIs('kunjungans.index')">
+                            {{ __('Kunjungan') }}
                         </x-nav-link>
                     </div>
+
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        <x-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
-                            {{ __('Dokter') }}
+                        <x-nav-link :href="route('rekam_medis.index')" :active="request()->routeIs('rekam_medis.index')">
+                            {{ __('Rekam Medis') }}
                         </x-nav-link>
                     </div>
+
+                    @if(Auth::user()->role === 'admin')
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('pasiens.index')" :active="request()->routeIs('pasiens.index')">
+                                {{ __('Pasien') }}
+                            </x-nav-link>
+                        </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
+                                {{ __('Dokter') }}
+                            </x-nav-link>
+                        </div>
+                    @endif
                 @endif
                 
             </div>
@@ -101,33 +114,42 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             
-            @if(Auth::user()->role === 'admin')
-                <x-responsive-nav-link :href="route('admin-dashboard')" :active="request()->routeIs('admin-dashboard')">
-                    {{ __('Dashboard Admin') }}
+            {{-- RESPONSIVE MENU KHUSUS PASIEN --}}
+            @if(Auth::user()->role === 'pasien')
+                <x-responsive-nav-link :href="route('pasiens.landingpage') . '#riwayat-medis'" :active="request()->routeIs('pasiens.landingpage')">
+                    {{ __('Kunjungan & Rekam Medis') }}
                 </x-responsive-nav-link>
-            @elseif(Auth::user()->role === 'dokter')
-                <x-responsive-nav-link :href="route('dokter-dashboard')" :active="request()->routeIs('dokter-dashboard')">
-                    {{ __('Dashboard Dokter') }}
-                </x-responsive-nav-link>
-            @endif
 
-            <x-responsive-nav-link :href="route('obats.index')" :active="request()->routeIs('obats.index')">
-                {{ __('Obat') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('kunjungans.index')" :active="request()->routeIs('kunjungans.index')">
-                {{ __('Kunjungan') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('rekam_medis.index')" :active="request()->routeIs('rekam_medis.index')">
-                {{ __('Rekam Medis') }}
-            </x-responsive-nav-link>
+            {{-- RESPONSIVE MENU KHUSUS ADMIN & DOKTER --}}
+            @else
+                @if(Auth::user()->role === 'admin')
+                    <x-responsive-nav-link :href="route('admin-dashboard')" :active="request()->routeIs('admin-dashboard')">
+                        {{ __('Dashboard Admin') }}
+                    </x-responsive-nav-link>
+                @elseif(Auth::user()->role === 'dokter')
+                    <x-responsive-nav-link :href="route('dokter-dashboard')" :active="request()->routeIs('dokter-dashboard')">
+                        {{ __('Dashboard Dokter') }}
+                    </x-responsive-nav-link>
+                @endif
 
-            @if(Auth::user()->role === 'admin')
-                <x-responsive-nav-link :href="route('pasiens.index')" :active="request()->routeIs('pasiens.index')">
-                    {{ __('Pasien') }}
+                <x-responsive-nav-link :href="route('obats.index')" :active="request()->routeIs('obats.index')">
+                    {{ __('Obat') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
-                    {{ __('Dokter') }}
+                <x-responsive-nav-link :href="route('kunjungans.index')" :active="request()->routeIs('kunjungans.index')">
+                    {{ __('Kunjungan') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('rekam_medis.index')" :active="request()->routeIs('rekam_medis.index')">
+                    {{ __('Rekam Medis') }}
+                </x-responsive-nav-link>
+
+                @if(Auth::user()->role === 'admin')
+                    <x-responsive-nav-link :href="route('pasiens.index')" :active="request()->routeIs('pasiens.index')">
+                        {{ __('Pasien') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
+                        {{ __('Dokter') }}
+                    </x-responsive-nav-link>
+                @endif
             @endif
         </div>
 

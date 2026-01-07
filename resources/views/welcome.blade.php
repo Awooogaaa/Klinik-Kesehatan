@@ -28,14 +28,41 @@
                     <a href="#home" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition duration-300">Beranda</a>
                     <a href="#about" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition duration-300">Tentang</a>
                     <a href="#services" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition duration-300">Layanan</a>
-                    <a href="#doctors" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition duration-300">Dokter</a>
                     <a href="#faq" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition duration-300">FAQ</a>
                 </div>
 
                 <div class="flex items-center gap-4">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="font-semibold text-gray-600 hover:text-blue-600">Dashboard</a>
+                            {{-- LOGIKA PENGARAHAN HALAMAN BERDASARKAN ROLE --}}
+                            @if(Auth::user()->role === 'admin')
+                                <a href="{{ route('admin-dashboard') }}" class="font-semibold text-gray-600 hover:text-blue-600">
+                                    Dashboard Admin
+                                </a>
+                            @elseif(Auth::user()->role === 'dokter')
+                                <a href="{{ route('dokter-dashboard') }}" class="font-semibold text-gray-600 hover:text-blue-600">
+                                    Dashboard Dokter
+                                </a>
+                            @elseif(Auth::user()->role === 'pasien')
+                                <a href="{{ route('pasiens.landingpage') }}" class="font-semibold text-gray-600 hover:text-blue-600">
+                                    Beranda Pasien
+                                </a>
+                            @else
+                                {{-- Fallback jika role tidak dikenali --}}
+                                <a href="{{ url('/dashboard') }}" class="font-semibold text-gray-600 hover:text-blue-600">
+                                    Dashboard
+                                </a>
+                            @endif
+
+                            {{-- TOMBOL LOGOUT --}}
+                            <form method="POST" action="{{ route('logout') }}" class="inline">
+                                @csrf
+                                <a href="{{ route('logout') }}" 
+                                   onclick="event.preventDefault(); this.closest('form').submit();"
+                                   class="ml-4 font-semibold text-red-500 hover:text-red-700 transition duration-300 border border-red-200 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-full text-sm">
+                                    Keluar
+                                </a>
+                            </form>
                         @else
                             <a href="{{ route('login') }}" class="hidden md:block text-gray-600 hover:text-blue-600 font-medium text-sm">Masuk</a>
                             @if (Route::has('register'))
