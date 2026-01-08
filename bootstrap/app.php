@@ -11,9 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // REGISTER ALIAS DI SINI
+        
+        // 1. DAFTARKAN ALIAS (INI KODE LAMA KAMU)
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class, // <-- Pastikan path ini benar
+            'role' => \App\Http\Middleware\RoleMiddleware::class, 
+        ]);
+
+        // 2. TAMBAHKAN INI: MEMATIKAN CSRF KHUSUS MIDTRANS
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/callback', // <-- INI KUNCI AGAR MIDTRANS BISA MASUK
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
