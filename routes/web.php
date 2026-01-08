@@ -126,4 +126,16 @@ Route::middleware(['auth', 'role:pasien'])->group(function () {
     Route::get('/landingpage-pasien/nota/{id}', [PasienController::class, 'nota'])->name('pasiens.nota');
 });
 
+// --- GROUP KHUSUS ADMIN ---
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    
+    // ... route admin lainnya ...
+
+    // Route Manajemen Pembayaran
+    Route::get('/admin/pembayarans', [PembayaranController::class, 'index'])->name('pembayarans.index');
+    Route::post('/admin/pembayarans/{id}/confirm', [PembayaranController::class, 'confirmOffline'])->name('pembayarans.confirmOffline');
+    Route::delete('/admin/pembayarans/{id}', [PembayaranController::class, 'destroy'])->name('pembayarans.destroy');
+
+});
+
 require __DIR__.'/auth.php';

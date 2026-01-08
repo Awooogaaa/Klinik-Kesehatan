@@ -10,6 +10,45 @@ use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
+    public function index()
+    {
+        $pembayarans = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter.user'])
+            ->latest()
+            ->paginate(10); // Menampilkan 10 data per halaman
+
+        return view('pembayarans.index', compact('pembayarans'));
+    }
+
+    public function confirmOffline($id)
+    {
+        $pembayaran = Pembayaran::findOrFail($id);
+
+        if ($pembayaran->status_pembayaran == 'lunas') {
+            return back()->with('error', 'Pembayaran ini sudah lunas.');
+        }
+
+        $pembayaran->update([
+            'status_pembayaran' => 'lunas',
+            'metode_pembayaran' => 'offline', // Set metode jadi offline karena admin yang klik
+        ]);
+        
+        // Update status kunjungan juga agar sinkron
+        if ($pembayaran->kunjungan) {
+            $pembayaran->kunjungan->update(['status' => 'selesai']);
+        }
+
+        return back()->with('success', 'Pembayaran berhasil dikonfirmasi secara Manual (Offline).');
+    }
+
+    public function destroy($id)
+    {
+        $pembayaran = Pembayaran::findOrFail($id);
+        $pembayaran->delete();
+
+        return back()->with('success', 'Data pembayaran berhasil dihapus.');
+    }
+
+    
    public function bayar()
 {
     // DEBUG: Cek apakah key terbaca?

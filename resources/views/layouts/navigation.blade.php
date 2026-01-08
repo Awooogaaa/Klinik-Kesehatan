@@ -11,7 +11,6 @@
                 {{-- KHUSUS PASIEN --}}
                 @if(Auth::user()->role === 'pasien')
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        {{-- Menggunakan route landingpage ditambah fragment #riwayat-medis --}}
                         <x-nav-link :href="route('pasiens.landingpage') . '#riwayat-medis'" :active="request()->routeIs('pasiens.landingpage')">
                             {{ __('Kunjungan & Rekam Medis') }}
                         </x-nav-link>
@@ -61,6 +60,13 @@
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <x-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
                                 {{ __('Dokter') }}
+                            </x-nav-link>
+                        </div>
+
+                        {{-- [BARU] MENU PEMBAYARAN DI DESKTOP --}}
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link :href="route('pembayarans.index')" :active="request()->routeIs('pembayarans.index')">
+                                {{ __('Pembayaran') }}
                             </x-nav-link>
                         </div>
                     @endif
@@ -141,6 +147,7 @@
                 <x-responsive-nav-link :href="route('rekam_medis.index')" :active="request()->routeIs('rekam_medis.index')">
                     {{ __('Rekam Medis') }}
                 </x-responsive-nav-link>
+                
 
                 @if(Auth::user()->role === 'admin')
                     <x-responsive-nav-link :href="route('pasiens.index')" :active="request()->routeIs('pasiens.index')">
@@ -148,6 +155,11 @@
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('dokters.index')" :active="request()->routeIs('dokters.index')">
                         {{ __('Dokter') }}
+                    </x-responsive-nav-link>
+
+                    {{-- [BARU] MENU PEMBAYARAN DI MOBILE --}}
+                    <x-responsive-nav-link :href="route('pembayarans.index')" :active="request()->routeIs('pembayarans.index')">
+                        {{ __('Pembayaran') }}
                     </x-responsive-nav-link>
                 @endif
             @endif
