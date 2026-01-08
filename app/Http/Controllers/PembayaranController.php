@@ -18,9 +18,7 @@ class PembayaranController extends Controller
     // Jika layar menampilkan "NULL" atau kosong, berarti masalahnya di Config/Env
     // dd($serverKey); 
 
-    // --- SOLUSI SEMENTARA: HARDCODE ---
-    // Masukkan Key langsung di sini untuk memastikan kode jalan dulu
-    // Ganti string ini dengan Server Key dari dashboard Midtrans kamu
+    
     Config::$serverKey = config('services.midtrans.server_key');
     
     Config::$isProduction = false;
