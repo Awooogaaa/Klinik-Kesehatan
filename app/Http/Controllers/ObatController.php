@@ -35,6 +35,7 @@ class ObatController extends Controller
             'nama_obat' => ['required', 'string', 'max:255', 'unique:obats'],
             'satuan' => ['required', 'string', 'max:100'],
             'stok' => ['required', 'integer', 'min:0'],
+            'harga' => ['required', 'integer', 'min:0'],
         ]);
 
         // Buat data
@@ -72,6 +73,7 @@ class ObatController extends Controller
             'nama_obat' => ['required', 'string', 'max:255', Rule::unique('obats')->ignore($obat->id)],
             'satuan' => ['required', 'string', 'max:100'],
             'stok' => ['required', 'integer', 'min:0'],
+            'harga' => ['required', 'integer', 'min:0'],
         ]);
 
         // Update data

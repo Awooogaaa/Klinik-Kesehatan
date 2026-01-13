@@ -30,6 +30,11 @@
                             <x-text-input id="stok" class="block mt-1 w-full" type="number" name="stok" :value="old('stok', 0)" required />
                             <x-input-error :messages="$errors->get('stok')" class="mt-2" />
                         </div>
+                        <div class="mb-4">
+    <x-input-label for="harga" :value="__('Harga (Rp)')" />
+    <x-text-input id="harga" class="block mt-1 w-full" type="number" name="harga" :value="old('harga')" required />
+    <x-input-error :messages="$errors->get('harga')" class="mt-2" />
+</div>
 
                         <div class="flex items-center justify-end mt-4">
                             <a href="{{ route('obats.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">

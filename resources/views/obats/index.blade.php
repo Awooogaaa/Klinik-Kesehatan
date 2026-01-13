@@ -26,6 +26,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Obat</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Satuan</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
                                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -35,6 +36,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $obat->nama_obat }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $obat->satuan }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $obat->stok }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($obat->harga, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('obats.edit', $obat) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                         
