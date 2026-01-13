@@ -147,6 +147,7 @@ if (!$serverKey) {
                     'order_id'     => $orderId,
                     'total_harga'  => $grandTotal,
                     'status_pembayaran' => 'pending',
+                    'metode_pembayaran' => null,
                     'snap_token'   => $snapToken,
                 ]);
 

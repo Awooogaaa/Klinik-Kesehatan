@@ -20,25 +20,25 @@ class PembayaranController extends Controller
     }
 
     public function confirmOffline($id)
-    {
-        $pembayaran = Pembayaran::findOrFail($id);
+{
+    $pembayaran = Pembayaran::findOrFail($id);
 
-        if ($pembayaran->status_pembayaran == 'lunas') {
-            return back()->with('error', 'Pembayaran ini sudah lunas.');
-        }
-
-        $pembayaran->update([
-            'status_pembayaran' => 'lunas',
-            'metode_pembayaran' => 'offline', // Set metode jadi offline karena admin yang klik
-        ]);
-        
-        // Update status kunjungan juga agar sinkron
-        if ($pembayaran->kunjungan) {
-            $pembayaran->kunjungan->update(['status' => 'selesai']);
-        }
-
-        return back()->with('success', 'Pembayaran berhasil dikonfirmasi secara Manual (Offline).');
+    if ($pembayaran->status_pembayaran == 'lunas') {
+        return back()->with('error', 'Pembayaran ini sudah lunas.');
     }
+
+    $pembayaran->update([
+        'status_pembayaran' => 'lunas',
+        'metode_pembayaran' => 'offline', 
+        // 'metode_pembayaran' => 'online',  <-- HAPUS BARIS INI (Ini penyebab errornya)
+    ]);
+    
+    if ($pembayaran->kunjungan) {
+        $pembayaran->kunjungan->update(['status' => 'selesai']);
+    }
+
+    return back()->with('success', 'Pembayaran berhasil dikonfirmasi secara Manual (Offline).');
+}
 
     public function destroy($id)
     {
@@ -118,11 +118,14 @@ class PembayaranController extends Controller
         $pembayaran = Pembayaran::where('order_id', $request->order_id)->first();
 
         if ($pembayaran) {
-            if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
+        if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
                 
                 // --- PERBAIKAN DISINI ---
                 // Ganti 'success' menjadi 'lunas' (Sesuai ENUM Database)
-                $pembayaran->update(['status_pembayaran' => 'lunas']); 
+                $pembayaran->update([
+                'status_pembayaran' => 'lunas',
+                'metode_pembayaran' => 'online' // Tambahkan ini agar tercatat sebagai Online
+            ]);
                 
                 // Opsional: Update status kunjungan
                  $pembayaran->kunjungan->update(['status' => 'selesai']);
