@@ -1,168 +1,362 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Manajemen Pasien') }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        {{ __('Manajemen Pasien') }}
+                    </h2>
+                    <p class="text-sm text-gray-500">Kelola data pasien klinik</p>
+                </div>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    
-                    <a href="{{ route('pasiens.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 active:bg-blue-600 disabled:opacity-25 transition mb-4">
-                        + Tambah Pasien
-                    </a>
+            
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                @php
+                    $totalPasien = $pasiens->total();
+                    $lakiLaki = $pasiens->where('jenis_kelamin', 'Laki-laki')->count();
+                    $perempuan = $pasiens->where('jenis_kelamin', 'Perempuan')->count();
+                    $denganAkun = $pasiens->whereNotNull('user_id')->count();
+                @endphp
+                
+                <div class="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl p-5 text-white shadow-lg shadow-teal-500/30 transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-teal-100 text-sm font-medium">Total Pasien</p>
+                            <p class="text-3xl font-bold mt-1">{{ $totalPasien }}</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-xl">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-blue-100 text-sm font-medium">Laki-laki</p>
+                            <p class="text-3xl font-bold mt-1">{{ $lakiLaki }}</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-xl">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl p-5 text-white shadow-lg shadow-pink-500/30 transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-pink-100 text-sm font-medium">Perempuan</p>
+                            <p class="text-3xl font-bold mt-1">{{ $perempuan }}</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-xl">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-500/30 transform hover:scale-105 transition-all duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-emerald-100 text-sm font-medium">Dengan Akun</p>
+                            <p class="text-3xl font-bold mt-1">{{ $denganAkun }}</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-xl">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Main Card -->
+            <div class="bg-white overflow-hidden shadow-xl rounded-2xl border border-gray-100">
+                <!-- Card Header -->
+                <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <h3 class="text-lg font-semibold text-gray-800">Daftar Pasien</h3>
+                        </div>
+                        
+                        <a href="{{ route('pasiens.create') }}" class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transform hover:-translate-y-0.5 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Tambah Pasien Baru
+                        </a>
+                    </div>
+                </div>
+
+                <div class="p-6">
                     @if (session('success'))
-                        <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg border border-green-200">
-                            {{ session('success') }}
+                        <div class="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center shadow-sm">
+                            <div class="flex-shrink-0 bg-emerald-500 rounded-full p-1 mr-3">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <span class="font-medium">{{ session('success') }}</span>
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto">
+                    <!-- Table -->
+                    <div class="overflow-x-auto rounded-xl border border-gray-200">
                         <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. RM</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Pasien</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akun Login</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Telepon</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            <thead>
+                                <tr class="bg-gradient-to-r from-gray-50 to-gray-100">
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Pasien</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">No. RM</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Akun Login</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Kontak</th>
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-100">
                                 @forelse ($pasiens as $pasien)
-                                    <tr x-data="{ showDetail: false }">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $pasien->no_rekam_medis }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $pasien->nama }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <tr x-data="{ showDetail: false }" class="hover:bg-gradient-to-r hover:from-gray-50 hover:to-teal-50/30 transition-all duration-200 group">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-200 {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' : 'bg-gradient-to-br from-pink-400 to-rose-500' }}">
+                                                    <span class="text-white font-bold text-lg">{{ strtoupper(substr($pasien->nama, 0, 2)) }}</span>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-semibold text-gray-900">{{ $pasien->nama }}</div>
+                                                    <div class="text-xs text-gray-500 flex items-center mt-0.5">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700' }}">
+                                                            {{ $pasien->jenis_kelamin }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-mono font-bold bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-sm">
+                                                {{ $pasien->no_rekam_medis }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
                                             @if($pasien->user)
                                                 <div class="flex flex-col">
-                                                    <span class="text-gray-900">{{ $pasien->user->email }}</span>
-                                                    <span class="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full w-fit mt-1">Terhubung</span>
+                                                    <span class="text-sm text-gray-700 font-medium">{{ $pasien->user->email }}</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 w-fit mt-1">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                        </svg>
+                                                        Terhubung
+                                                    </span>
                                                 </div>
                                             @else
-                                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Tidak ada akun</span>
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                    Tidak ada akun
+                                                </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $pasien->no_telepon }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ Str::limit($pasien->alamat, 20) }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                            
-                                            <button @click="showDetail = true" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition">
-                                                Lihat
-                                            </button>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900 flex items-center">
+                                                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                </svg>
+                                                {{ $pasien->no_telepon }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 flex items-center mt-1">
+                                                <svg class="w-3 h-3 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                </svg>
+                                                {{ Str::limit($pasien->alamat, 25) }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <button @click="showDetail = true" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-teal-600 hover:to-cyan-700 transform hover:-translate-y-0.5 transition-all duration-200">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                    </svg>
+                                                    Lihat
+                                                </button>
 
-                                            <a href="{{ route('pasiens.edit', $pasien) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded transition">Edit</a>
-                                            
-                                            <form action="{{ route('pasiens.destroy', $pasien) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus data pasien ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition">Hapus</button>
-                                            </form>
+                                                <a href="{{ route('pasiens.edit', $pasien) }}" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                    </svg>
+                                                    Edit
+                                                </a>
+                                                
+                                                <form action="{{ route('pasiens.destroy', $pasien) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus data pasien ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-red-500 to-rose-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-red-600 hover:to-rose-700 transform hover:-translate-y-0.5 transition-all duration-200">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
 
+                                            <!-- Modal Detail Pasien -->
                                             <div x-show="showDetail" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                                                 <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                                    
-                                                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showDetail = false"></div>
-
+                                                    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" @click="showDetail = false"></div>
                                                     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                                                    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full">
-                                                        
-                                                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-100">
-                                                            <div class="sm:flex sm:items-start">
-                                                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                                                                    <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                    </svg>
+                                                    
+                                                    <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full">
+                                                        <!-- Modal Header -->
+                                                        <div class="bg-gradient-to-r from-teal-500 to-cyan-600 px-6 py-6 flex items-center justify-between">
+                                                            <div class="flex items-center space-x-4">
+                                                                <div class="h-16 w-16 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white/30 {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-blue-500' : 'bg-pink-500' }}">
+                                                                    <span class="text-white font-bold text-2xl">{{ strtoupper(substr($pasien->nama, 0, 2)) }}</span>
                                                                 </div>
-                                                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                                                        Detail Pasien
-                                                                    </h3>
-                                                                    <div class="mt-2 text-sm text-gray-500">
-                                                                        Informasi lengkap mengenai data diri pasien.
-                                                                    </div>
-                                                                </div>
-                                                                <button @click="showDetail = false" class="text-gray-400 hover:text-gray-500">
-                                                                    <span class="sr-only">Close</span>
-                                                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="px-6 py-6 bg-gray-50">
-                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                                                <div class="space-y-4">
-                                                                    <div>
-                                                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Lengkap</label>
-                                                                        <p class="mt-1 text-gray-900 font-semibold text-lg">{{ $pasien->nama }}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">No. Rekam Medis</label>
-                                                                        <p class="mt-1 text-blue-600 font-mono font-bold">{{ $pasien->no_rekam_medis }}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">Jenis Kelamin</label>
-                                                                        <span class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
+                                                                <div>
+                                                                    <h3 class="text-xl font-bold text-white">{{ $pasien->nama }}</h3>
+                                                                    <div class="flex items-center space-x-2 mt-1">
+                                                                        <span class="inline-flex items-center bg-white/20 text-white text-sm px-3 py-1 rounded-full font-medium">
+                                                                            {{ $pasien->no_rekam_medis }}
+                                                                        </span>
+                                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-blue-400 text-white' : 'bg-pink-400 text-white' }}">
                                                                             {{ $pasien->jenis_kelamin }}
                                                                         </span>
                                                                     </div>
                                                                 </div>
+                                                            </div>
+                                                            <button @click="showDetail = false" class="text-white/70 hover:text-white transition-colors">
+                                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                </svg>
+                                                            </button>
+                                                        </div>
 
-                                                                <div class="space-y-4">
+                                                        <!-- Modal Body -->
+                                                        <div class="px-6 py-6 bg-gray-50">
+                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div class="flex items-start space-x-4 p-4 bg-white rounded-xl border border-gray-100">
+                                                                    <div class="flex-shrink-0 p-2 bg-teal-100 rounded-lg">
+                                                                        <svg class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                                        </svg>
+                                                                    </div>
                                                                     <div>
-                                                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">Tanggal Lahir / Usia</label>
-                                                                        <p class="mt-1 text-gray-900">
-                                                                            {{ \Carbon\Carbon::parse($pasien->tanggal_lahir)->format('d M Y') }} 
-                                                                            <span class="text-gray-500">({{ \Carbon\Carbon::parse($pasien->tanggal_lahir)->age }} Tahun)</span>
+                                                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Lahir</p>
+                                                                        <p class="text-sm font-semibold text-gray-900 mt-1">
+                                                                            {{ \Carbon\Carbon::parse($pasien->tanggal_lahir)->format('d M Y') }}
+                                                                            <span class="text-gray-500 font-normal">({{ \Carbon\Carbon::parse($pasien->tanggal_lahir)->age }} Tahun)</span>
                                                                         </p>
                                                                     </div>
-                                                                    <div>
-                                                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">Nomor Telepon</label>
-                                                                        <p class="mt-1 text-gray-900">{{ $pasien->no_telepon }}</p>
+                                                                </div>
+
+                                                                <div class="flex items-start space-x-4 p-4 bg-white rounded-xl border border-gray-100">
+                                                                    <div class="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
+                                                                        <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                                                        </svg>
                                                                     </div>
                                                                     <div>
-                                                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide">Alamat</label>
-                                                                        <p class="mt-1 text-gray-900 leading-relaxed">{{ $pasien->alamat }}</p>
+                                                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Telepon</p>
+                                                                        <p class="text-sm font-semibold text-gray-900 mt-1">{{ $pasien->no_telepon }}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="md:col-span-2 flex items-start space-x-4 p-4 bg-white rounded-xl border border-gray-100">
+                                                                    <div class="flex-shrink-0 p-2 bg-violet-100 rounded-lg">
+                                                                        <svg class="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                                        </svg>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat Lengkap</p>
+                                                                        <p class="text-sm font-semibold text-gray-900 mt-1 leading-relaxed">{{ $pasien->alamat }}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
 
-                                                            <div class="mt-6 pt-4 border-t border-gray-200">
-                                                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Informasi Akun</label>
+                                                            <!-- Informasi Akun -->
+                                                            <div class="mt-4 p-4 bg-white rounded-xl border border-gray-100">
+                                                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Informasi Akun</p>
                                                                 @if($pasien->user)
-                                                                    <div class="bg-white p-3 rounded border border-gray-200 flex items-center justify-between">
-                                                                        <div>
-                                                                            <p class="text-gray-900 font-medium">{{ $pasien->user->name }}</p>
-                                                                            <p class="text-gray-500 text-xs">{{ $pasien->user->email }}</p>
+                                                                    <div class="flex items-center justify-between">
+                                                                        <div class="flex items-center space-x-3">
+                                                                            <div class="h-10 w-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center">
+                                                                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                                                </svg>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="text-sm font-semibold text-gray-900">{{ $pasien->user->name }}</p>
+                                                                                <p class="text-xs text-gray-500">{{ $pasien->user->email }}</p>
+                                                                            </div>
                                                                         </div>
-                                                                        <span class="text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-bold">Aktif</span>
+                                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                                                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                            </svg>
+                                                                            Aktif
+                                                                        </span>
                                                                     </div>
                                                                 @else
-                                                                    <p class="text-gray-500 text-xs italic">Pasien ini belum ditautkan ke akun pengguna manapun.</p>
+                                                                    <p class="text-sm text-gray-500 italic">Pasien ini belum ditautkan ke akun pengguna manapun.</p>
                                                                 @endif
                                                             </div>
                                                         </div>
 
-                                                        <div class="bg-white px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-100">
-                                                            <button type="button" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" @click="showDetail = false">
+                                                        <!-- Modal Footer -->
+                                                        <div class="bg-white px-6 py-4 flex justify-end space-x-3 border-t border-gray-100">
+                                                            <a href="{{ route('pasiens.edit', $pasien) }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200">
+                                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                                </svg>
+                                                                Edit Pasien
+                                                            </a>
+                                                            <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-xl text-gray-700 text-sm font-semibold hover:bg-gray-100 transition-all duration-200" @click="showDetail = false">
                                                                 Tutup
                                                             </button>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            </td>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
-                                            Tidak ada data pasien.
+                                        <td colspan="5" class="px-6 py-16 text-center">
+                                            <div class="flex flex-col items-center">
+                                                <div class="p-4 bg-gray-100 rounded-full mb-4">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                    </svg>
+                                                </div>
+                                                <p class="text-gray-500 text-lg font-medium mb-2">Tidak ada data pasien</p>
+                                                <p class="text-gray-400 text-sm mb-4">Mulai tambahkan pasien pertama</p>
+                                                <a href="{{ route('pasiens.create') }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-lg text-white text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+                                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                                    </svg>
+                                                    Tambah Pasien Pertama
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -170,10 +364,10 @@
                         </table>
                     </div>
 
-                    <div class="mt-4">
+                    <!-- Pagination -->
+                    <div class="mt-6">
                         {{ $pasiens->links() }}
                     </div>
-
                 </div>
             </div>
         </div>

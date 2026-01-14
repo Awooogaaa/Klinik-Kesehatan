@@ -1,119 +1,315 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Data Pasien') }}
-        </h2>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('pasiens.index') }}" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors duration-200">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div class="p-2 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl shadow-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                    {{ __('Edit Data Pasien') }}
+                </h2>
+                <p class="text-sm text-gray-500">Perbarui informasi {{ $pasien->nama }}</p>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    
-                    <form action="{{ route('pasiens.update', $pasien) }}" method="POST">
+    <div class="py-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl rounded-2xl border border-gray-100">
+                <!-- Card Header with Patient Info -->
+                <div class="px-6 py-6 border-b border-gray-100 bg-gradient-to-r from-teal-500 to-cyan-600">
+                    <div class="flex items-center space-x-5">
+                        <div class="h-16 w-16 rounded-2xl flex items-center justify-center shadow-xl border-4 border-white/30 {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-blue-500' : 'bg-pink-500' }}">
+                            <span class="text-white font-bold text-2xl">{{ strtoupper(substr($pasien->nama, 0, 2)) }}</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">{{ $pasien->nama }}</h3>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="inline-flex items-center bg-white/20 text-white text-sm px-3 py-1 rounded-full font-mono font-medium">
+                                    {{ $pasien->no_rekam_medis }}
+                                </span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pasien->jenis_kelamin == 'Laki-laki' ? 'bg-blue-400 text-white' : 'bg-pink-400 text-white' }}">
+                                    {{ $pasien->jenis_kelamin }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <form action="{{ route('pasiens.update', $pasien) }}" method="POST" class="space-y-8">
                         @csrf
                         @method('PUT')
                         
-                        <div class="mb-8 border-b pb-8">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                                <span class="bg-blue-100 text-blue-600 py-1 px-3 rounded-full text-xs mr-2">1</span>
-                                Data Pribadi Pasien
-                            </h3>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Section 1: Data Pribadi Pasien -->
+                        <div>
+                            <div class="flex items-center space-x-3 mb-6">
+                                <div class="p-2 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl shadow">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
                                 <div>
-                                    <x-input-label for="no_rekam_medis" :value="__('Nomor Rekam Medis (No. RM)')" />
-                                    <x-text-input id="no_rekam_medis" class="block mt-1 w-full bg-gray-100" 
-                                                  type="text" :value="$pasien->no_rekam_medis" 
-                                                  disabled readonly />
-                                    <small class="text-gray-500">Otomatis dari sistem.</small>
+                                    <h3 class="font-semibold text-lg text-gray-800">1. Data Pribadi Pasien</h3>
+                                    <p class="text-sm text-gray-500">Informasi dasar pasien</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl">
+                                <div class="group">
+                                    <label for="no_rekam_medis" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                                        </svg>
+                                        No. Rekam Medis
+                                    </label>
+                                    <input type="text" id="no_rekam_medis" value="{{ $pasien->no_rekam_medis }}" disabled readonly
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-600 font-mono font-bold">
+                                    <p class="text-xs text-gray-500 mt-1">Otomatis dari sistem</p>
                                 </div>
                                 
-                                <div>
-                                    <x-input-label for="nama" :value="__('Nama Lengkap')" />
-                                    <x-text-input id="nama" class="block mt-1 w-full" type="text" name="nama" 
-                                                  :value="old('nama', $pasien->nama)" required />
-                                    <x-input-error :messages="$errors->get('nama')" class="mt-2" />
+                                <div class="group">
+                                    <label for="nama" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                        Nama Lengkap <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="text" id="nama" name="nama" value="{{ old('nama', $pasien->nama) }}" required
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white">
+                                    @error('nama')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                
+                                <div class="group">
+                                    <label for="no_telepon" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                        </svg>
+                                        No. Telepon <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="text" id="no_telepon" name="no_telepon" value="{{ old('no_telepon', $pasien->no_telepon) }}" required
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white">
+                                    @error('no_telepon')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                
+                                <div class="group">
+                                    <label for="tanggal_lahir" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        Tanggal Lahir <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="date" id="tanggal_lahir" name="tanggal_lahir" value="{{ old('tanggal_lahir', $pasien->tanggal_lahir) }}" required
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white">
+                                    @error('tanggal_lahir')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                
+                                <div class="group">
+                                    <label for="jenis_kelamin" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                        </svg>
+                                        Jenis Kelamin <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="jenis_kelamin" value="Laki-laki" class="peer sr-only" @if(old('jenis_kelamin', $pasien->jenis_kelamin) == 'Laki-laki') checked @endif required>
+                                            <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50">
+                                                <div class="w-10 h-10 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">Laki-laki</span>
+                                            </div>
+                                        </label>
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="jenis_kelamin" value="Perempuan" class="peer sr-only" @if(old('jenis_kelamin', $pasien->jenis_kelamin) == 'Perempuan') checked @endif>
+                                            <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-pink-500 peer-checked:bg-pink-50 hover:border-gray-300 hover:bg-gray-50">
+                                                <div class="w-10 h-10 mx-auto mb-2 bg-pink-100 rounded-full flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">Perempuan</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    @error('jenis_kelamin')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
-                                <div>
-                                    <x-input-label for="no_telepon" :value="__('No. Telepon')" />
-                                    <x-text-input id="no_telepon" class="block mt-1 w-full" type="text" name="no_telepon" 
-                                                  :value="old('no_telepon', $pasien->no_telepon)" required />
-                                    <x-input-error :messages="$errors->get('no_telepon')" class="mt-2" />
+                                <div class="md:col-span-2 group">
+                                    <label for="alamat" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        Alamat Lengkap
+                                    </label>
+                                    <textarea id="alamat" name="alamat" rows="3"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white resize-none">{{ old('alamat', $pasien->alamat) }}</textarea>
+                                    @error('alamat')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
+                            </div>
+                        </div>
 
-                                <div>
-                                    <x-input-label for="tanggal_lahir" :value="__('Tanggal Lahir')" />
-                                    <x-text-input id="tanggal_lahir" class="block mt-1 w-full" type="date" name="tanggal_lahir" 
-                                                  :value="old('tanggal_lahir', $pasien->tanggal_lahir)" required />
-                                    <x-input-error :messages="$errors->get('tanggal_lahir')" class="mt-2" />
+                        <!-- Section 2: Akun Login -->
+                        <div>
+                            <div class="flex items-center space-x-3 mb-6">
+                                <div class="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                    </svg>
                                 </div>
-
                                 <div>
-                                    <x-input-label for="jenis_kelamin" :value="__('Jenis Kelamin')" />
-                                    <select id="jenis_kelamin" name="jenis_kelamin" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="Laki-laki" @if(old('jenis_kelamin', $pasien->jenis_kelamin) == 'Laki-laki') selected @endif>Laki-laki</option>
-                                        <option value="Perempuan" @if(old('jenis_kelamin', $pasien->jenis_kelamin) == 'Perempuan') selected @endif>Perempuan</option>
-                                    </select>
-                                    <x-input-error :messages="$errors->get('jenis_kelamin')" class="mt-2" />
+                                    <h3 class="font-semibold text-lg text-gray-800">2. Akun Login Aplikasi</h3>
+                                    <p class="text-sm text-gray-500">Opsional - untuk akses portal pasien</p>
                                 </div>
                             </div>
                             
-                            <div class="mt-4">
-                                <x-input-label for="alamat" :value="__('Alamat')" />
-                                <textarea id="alamat" name="alamat" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" rows="3">{{ old('alamat', $pasien->alamat) }}</textarea>
-                                <x-input-error :messages="$errors->get('alamat')" class="mt-2" />
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center">
-                                <span class="bg-gray-100 text-gray-600 py-1 px-3 rounded-full text-xs mr-2">2</span>
-                                Akun Login Aplikasi (Opsional)
-                            </h3>
-
+                            <!-- Status Box -->
                             @if($pasien->user)
-                                <div class="mb-4 p-3 bg-green-50 text-green-700 rounded text-sm border border-green-200">
-                                    <strong>Status: Terhubung.</strong> Pasien ini terhubung dengan akun email: <strong>{{ $pasien->user->email }}</strong>
+                                <div class="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl flex items-start">
+                                    <div class="flex-shrink-0 bg-emerald-500 rounded-lg p-1.5 mr-3">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                    <div class="text-emerald-800">
+                                        <p class="font-semibold">Status: Terhubung</p>
+                                        <p class="text-sm mt-1">Pasien ini terhubung dengan akun email: <strong>{{ $pasien->user->email }}</strong></p>
+                                    </div>
                                 </div>
                             @else
-                                <div class="mb-4 p-3 bg-yellow-50 text-yellow-700 rounded text-sm border border-yellow-200">
-                                    <strong>Status: Belum Ada Akun.</strong> Isi form di bawah jika ingin membuatkan akun atau menghubungkan ke akun keluarga.
+                                <div class="mb-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl flex items-start">
+                                    <div class="flex-shrink-0 bg-amber-500 rounded-lg p-1.5 mr-3">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="text-amber-800">
+                                        <p class="font-semibold">Status: Belum Ada Akun</p>
+                                        <p class="text-sm mt-1">Isi form di bawah jika ingin membuatkan akun atau menghubungkan ke akun keluarga.</p>
+                                    </div>
                                 </div>
                             @endif
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <div>
-                                    <x-input-label for="email" :value="__('Email Akun')" />
-                                    <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" 
-                                                  :value="old('email', $pasien->user->email ?? '')" 
-                                                  placeholder="Email Login" />
-                                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl">
+                                <div class="group">
+                                    <label for="email" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 mr-2 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        Email Akun
+                                    </label>
+                                    <input type="email" id="email" name="email" value="{{ old('email', $pasien->user->email ?? '') }}"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all duration-200 bg-white"
+                                        placeholder="Email Login">
+                                    @error('email')
+                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                <div class="grid grid-cols-1 gap-4">
-                                    <div>
-                                        <x-input-label for="password" :value="__('Password Baru (Opsional)')" />
-                                        <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" 
-                                                      placeholder="Isi jika ingin ubah/buat password" />
-                                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                                
+                                <div class="space-y-4">
+                                    <div class="group">
+                                        <label for="password" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                            <svg class="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                            </svg>
+                                            Password Baru <span class="text-gray-400 text-xs ml-1">(Opsional)</span>
+                                        </label>
+                                        <input type="password" id="password" name="password"
+                                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all duration-200 bg-white"
+                                            placeholder="Isi jika ingin ubah/buat password">
+                                        @error('password')
+                                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
-                                    <div>
-                                        <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" />
-                                        <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" />
+                                    
+                                    <div class="group">
+                                        <label for="password_confirmation" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                                            <svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                            </svg>
+                                            Konfirmasi Password
+                                        </label>
+                                        <input type="password" id="password_confirmation" name="password_confirmation"
+                                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all duration-200 bg-white">
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end mt-6">
-                            <a href="{{ route('pasiens.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">Batal</a>
-                            <x-primary-button>
-                                {{ __('Simpan Perubahan') }}
-                            </x-primary-button>
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-between pt-6 border-t border-gray-100">
+                            <form action="{{ route('pasiens.destroy', $pasien) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus data pasien ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="inline-flex items-center px-4 py-2.5 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all duration-200">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Hapus Pasien
+                                </button>
+                            </form>
+                            
+                            <div class="flex items-center space-x-4">
+                                <a href="{{ route('pasiens.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Batal
+                                </a>
+                                <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl text-white font-semibold shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:from-teal-600 hover:to-cyan-700 transform hover:-translate-y-0.5 transition-all duration-200">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    Simpan Perubahan
+                                </button>
+                            </div>
                         </div>
                     </form>
+                </div>
+            </div>
 
+            <!-- Info Card -->
+            <div class="mt-6 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-2xl p-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-gray-500 rounded-xl p-2">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-800">Informasi Data</h4>
+                        <div class="mt-2 text-sm text-gray-600 space-y-1">
+                            <p class="flex items-center">
+                                <span class="font-medium w-32">Terdaftar pada:</span>
+                                <span>{{ $pasien->created_at->format('d M Y, H:i') }}</span>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="font-medium w-32">Terakhir diubah:</span>
+                                <span>{{ $pasien->updated_at->format('d M Y, H:i') }}</span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

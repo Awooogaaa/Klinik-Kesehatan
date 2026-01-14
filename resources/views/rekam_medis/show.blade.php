@@ -1,75 +1,199 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Detail Rekam Medis') }}
-        </h2>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('rekam_medis.index') }}" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors duration-200">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div class="p-2 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl shadow-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                    {{ __('Detail Rekam Medis') }}
+                </h2>
+                <p class="text-sm text-gray-500">Lihat catatan medis lengkap</p>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    
-                    <a href="{{ route('rekam_medis.index') }}" class="text-blue-600 hover:text-blue-900 mb-4 inline-block">&larr; Kembali ke Daftar</a>
+    <div class="py-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl rounded-2xl border border-gray-100">
+                <!-- Header with Patient Info -->
+                <div class="px-6 py-6 border-b border-gray-100 bg-gradient-to-r from-rose-500 to-pink-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-5">
+                            <div class="h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center shadow-xl border-4 border-white/30">
+                                <span class="text-white font-bold text-2xl">{{ strtoupper(substr($rekamMedis->pasien->nama ?? 'P', 0, 2)) }}</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">{{ $rekamMedis->pasien->nama ?? 'N/A' }}</h3>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="inline-flex items-center bg-white/20 text-white text-sm px-3 py-1 rounded-full font-mono font-medium">
+                                        {{ $rekamMedis->pasien->no_rekam_medis ?? '-' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-rose-100 text-xs uppercase font-semibold">Tanggal Pemeriksaan</p>
+                            <p class="text-white font-bold text-lg">{{ $rekamMedis->created_at->format('d M Y') }}</p>
+                        </div>
+                    </div>
+                </div>
 
-                    <h3 class="font-semibold text-lg mb-2">Data Kunjungan</h3>
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div><strong>Pasien:</strong> {{ $rekamMedis->pasien->name ?? 'N/A' }}</div>
-                        <div><strong>No. RM:</strong> {{ $rekamMedis->pasien->pasien->no_rekam_medis ?? 'N/A' }}</div>
-                        <div><strong>Dokter:</strong> {{ $rekamMedis->dokter->name ?? 'N/A' }}</div>
-                        <div><strong>Tanggal:</strong> {{ $rekamMedis->tanggal_kunjungan }}</div>
+                <div class="p-8 space-y-8">
+                    <!-- Info Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-start space-x-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                            <div class="flex-shrink-0 p-2 bg-blue-500 rounded-lg">
+                                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-blue-600 uppercase tracking-wider">Dokter Pemeriksa</p>
+                                <p class="text-lg font-semibold text-gray-900 mt-1">Dr. {{ $rekamMedis->dokter->user->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                            <div class="flex-shrink-0 p-2 bg-amber-500 rounded-lg">
+                                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-amber-600 uppercase tracking-wider">Waktu Kunjungan</p>
+                                <p class="text-lg font-semibold text-gray-900 mt-1">{{ $rekamMedis->kunjungan->waktu_kunjungan->format('d M Y, H:i') ?? '-' }}</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <h3 class="font-semibold text-lg mb-2">Detail Medis</h3>
-                    <div class="space-y-4 mb-6">
-                        <div>
-                            <strong class="block">Keluhan:</strong>
-                            <p class="border p-2 rounded-md bg-gray-50">{{ $rekamMedis->keluhan }}</p>
+                    <!-- Keluhan Section -->
+                    <div>
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-1.5 bg-violet-100 rounded-lg">
+                                <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Keluhan Pasien</h3>
                         </div>
-                        <div>
-                            <strong class="block">Diagnosa:</strong>
-                            <p class="border p-2 rounded-md bg-gray-50">{{ $rekamMedis->diagnosa }}</p>
+                        <div class="p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                            <p class="text-gray-800 leading-relaxed">{{ $rekamMedis->keluhan }}</p>
                         </div>
-                        @if($rekamMedis->tindakan)
-                        <div>
-                            <strong class="block">Tindakan:</strong>
-                            <p class="border p-2 rounded-md bg-gray-50">{{ $rekamMedis->tindakan }}</p>
-                        </div>
-                        @endif
                     </div>
 
-                    <h3 class="font-semibold text-lg mb-2">Resep Obat</h3>
-                    <table class="min-w-full divide-y divide-gray-200 border">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Obat</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosis</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse ($rekamMedis->obats as $obat)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $obat->nama_obat }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $obat->pivot->jumlah }} {{ $obat->satuan }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $obat->pivot->dosis }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
-                                        Tidak ada resep obat.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <!-- Diagnosa Section -->
+                    <div>
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-1.5 bg-rose-100 rounded-lg">
+                                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Diagnosa Dokter</h3>
+                        </div>
+                        <div class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl border border-rose-200">
+                            <p class="text-gray-800 leading-relaxed">{{ $rekamMedis->diagnosa }}</p>
+                        </div>
+                    </div>
 
-                    <div class="flex items-center justify-end mt-6">
-                        <a href="{{ route('rekam_medis.edit', $rekamMedis) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring focus:ring-indigo-200 active:bg-indigo-600 disabled:opacity-25 transition">
-                            Edit
+                    <!-- Tindakan Section -->
+                    @if($rekamMedis->tindakan)
+                    <div>
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-1.5 bg-teal-100 rounded-lg">
+                                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Tindakan Medis</h3>
+                        </div>
+                        <div class="p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-200">
+                            <p class="text-gray-800 leading-relaxed">{{ $rekamMedis->tindakan }}</p>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Resep Obat Section -->
+                    <div>
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-1.5 bg-emerald-100 rounded-lg">
+                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Resep Obat</h3>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-emerald-200">
+                            <table class="min-w-full divide-y divide-emerald-200">
+                                <thead>
+                                    <tr class="bg-gradient-to-r from-emerald-50 to-teal-50">
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">Nama Obat</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">Jumlah</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">Dosis</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-100">
+                                    @forelse ($rekamMedis->obats as $obat)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="p-2 bg-emerald-100 rounded-lg mr-3">
+                                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <span class="font-semibold text-gray-900">{{ $obat->nama_obat }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-semibold bg-blue-100 text-blue-700">
+                                                    {{ $obat->pivot->jumlah }} {{ $obat->satuan }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ $obat->pivot->dosis }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="px-6 py-8 text-center">
+                                                <div class="flex flex-col items-center">
+                                                    <div class="p-3 bg-gray-100 rounded-full mb-3">
+                                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <p class="text-gray-500">Tidak ada resep obat</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-100">
+                        <a href="{{ route('rekam_medis.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            Kembali
+                        </a>
+                        <a href="{{ route('rekam_medis.edit', $rekamMedis) }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-600 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit Rekam Medis
                         </a>
                     </div>
-
                 </div>
             </div>
         </div>
