@@ -13,6 +13,18 @@ class KunjunganController extends Controller
     {
         $query = Kunjungan::with(['pasien', 'dokter.user']);
 
+        // Filter by logged-in dokter if user has dokter role
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            $dokter = Dokter::where('user_id', $user->id)->first();
+            if ($dokter) {
+                $query->where('dokter_id', $dokter->id);
+            } else {
+                // Dokter profile not found, show empty
+                $query->whereRaw('1 = 0');
+            }
+        }
+
         // Search by pasien name, keluhan, or dokter name
         if ($request->filled('search')) {
             $search = $request->search;

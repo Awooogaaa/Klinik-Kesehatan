@@ -22,6 +22,19 @@ class PasienController extends Controller
     {
         $query = Pasien::with('user');
 
+        // Filter by logged-in dokter if user has dokter role
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            $dokter = Dokter::where('user_id', $user->id)->first();
+            if ($dokter) {
+                $query->whereHas('kunjungans', function($q) use ($dokter) {
+                    $q->where('dokter_id', $dokter->id);
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
         // Search by nama or no_rekam_medis
         if ($request->filled('search')) {
             $search = $request->search;

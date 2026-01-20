@@ -6,6 +6,7 @@ use Midtrans\Config;
 use Midtrans\Snap;
 use Illuminate\Http\Request;
 use App\Models\Pembayaran;
+use App\Models\Dokter;
 use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
@@ -13,6 +14,19 @@ class PembayaranController extends Controller
     public function index(Request $request)
     {
         $query = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter.user']);
+
+        // Filter by logged-in dokter if user has dokter role
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            $dokter = Dokter::where('user_id', $user->id)->first();
+            if ($dokter) {
+                $query->whereHas('kunjungan', function($q) use ($dokter) {
+                    $q->where('dokter_id', $dokter->id);
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         // Search by pasien name or status
         if ($request->filled('search')) {

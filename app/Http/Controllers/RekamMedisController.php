@@ -6,6 +6,7 @@ use App\Models\RekamMedis;
 use App\Models\Kunjungan;
 use App\Models\Obat;
 use App\Models\Pembayaran;
+use App\Models\Dokter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +18,17 @@ class RekamMedisController extends Controller
     public function index(Request $request)
     {
         $query = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan', 'obats']);
+
+        // Filter by logged-in dokter if user has dokter role
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            $dokter = Dokter::where('user_id', $user->id)->first();
+            if ($dokter) {
+                $query->where('dokter_id', $dokter->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         // Search by pasien name or diagnosa
         if ($request->filled('search')) {
@@ -50,11 +62,23 @@ class RekamMedisController extends Controller
 
     public function create()
     {
-        $kunjungans = Kunjungan::with(['pasien', 'dokter.user'])
+        $kunjungansQuery = Kunjungan::with(['pasien', 'dokter.user'])
             ->where('status', 'disetujui')
             ->whereDoesntHave('rekamMedis') 
-            ->orderBy('waktu_kunjungan', 'asc')
-            ->get();
+            ->orderBy('waktu_kunjungan', 'asc');
+
+        // Filter by logged-in dokter if user has dokter role
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            $dokter = Dokter::where('user_id', $user->id)->first();
+            if ($dokter) {
+                $kunjungansQuery->where('dokter_id', $dokter->id);
+            } else {
+                $kunjungansQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $kunjungans = $kunjungansQuery->get();
 
         $obats = Obat::orderBy('nama_obat')->get();
 
