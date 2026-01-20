@@ -162,6 +162,16 @@
                                         </svg>
                                         Foto Dokter <span class="text-red-500 ml-1">*</span>
                                     </label>
+                                    
+                                    <!-- Image Preview -->
+                                    <div id="preview-container" class="hidden mb-4 flex items-center space-x-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                                        <img id="preview-image" src="" alt="Preview" class="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-md">
+                                        <div>
+                                            <p class="text-sm font-medium text-emerald-800">Preview Foto</p>
+                                            <p id="preview-filename" class="text-xs text-emerald-600 mt-1"></p>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="flex items-center justify-center w-full">
                                         <label for="foto" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors duration-200">
                                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -171,13 +181,31 @@
                                                 <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk upload</span> atau drag and drop</p>
                                                 <p class="text-xs text-gray-400">PNG, JPG (Maks. 2MB)</p>
                                             </div>
-                                            <input id="foto" type="file" name="foto" class="hidden" required accept="image/*" />
+                                            <input id="foto" type="file" name="foto" class="hidden" required accept="image/*" onchange="previewImage(this)" />
                                         </label>
                                     </div>
                                     @error('foto')
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>
+
+                                <script>
+                                    function previewImage(input) {
+                                        const container = document.getElementById('preview-container');
+                                        const image = document.getElementById('preview-image');
+                                        const filename = document.getElementById('preview-filename');
+                                        
+                                        if (input.files && input.files[0]) {
+                                            const reader = new FileReader();
+                                            reader.onload = function(e) {
+                                                image.src = e.target.result;
+                                                filename.textContent = input.files[0].name;
+                                                container.classList.remove('hidden');
+                                            }
+                                            reader.readAsDataURL(input.files[0]);
+                                        }
+                                    }
+                                </script>
 
                                 <div class="md:col-span-2 group">
                                     <label for="alamat" class="flex items-center text-sm font-semibold text-gray-700 mb-2">

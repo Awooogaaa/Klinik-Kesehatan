@@ -14,11 +14,37 @@ use Midtrans\Snap;
 
 class RekamMedisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $rekamMedis = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan', 'obats'])
-                                ->latest()
-                                ->paginate(10);
+        $query = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan', 'obats']);
+
+        // Search by pasien name or diagnosa
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('pasien', function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                })
+                ->orWhere('diagnosa', 'like', "%{$search}%");
+            });
+        }
+
+        // Search by obat name
+        if ($request->filled('obat')) {
+            $query->whereHas('obats', function($q) use ($request) {
+                $q->where('nama_obat', 'like', "%{$request->obat}%");
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rekamMedis = $query->latest()->paginate(10)->withQueryString();
         return view('rekam_medis.index', compact('rekamMedis'));
     }
 

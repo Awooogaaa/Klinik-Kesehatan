@@ -7,6 +7,7 @@ use App\Models\User; // <-- Import User
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; // <-- Import DB
 use Illuminate\Support\Facades\Hash; // <-- Import Hash
+use Illuminate\Support\Facades\Storage; // <-- Import Storage
 use Illuminate\Validation\Rule; // <-- Import Rule
 use Illuminate\Validation\Rules as ValidationRules; // <-- Import ValidationRules
 
@@ -15,9 +16,22 @@ class DokterController extends Controller
     /**
      * Menampilkan daftar semua dokter.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $dokters = Dokter::with('user')->latest()->paginate(10);
+        $query = Dokter::with('user');
+
+        // Search by name or spesialisasi
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orWhere('spesialisasi', 'like', "%{$search}%");
+            });
+        }
+
+        $dokters = $query->latest()->paginate(10)->withQueryString();
         return view('dokters.index', compact('dokters'));
     }
 
@@ -139,6 +153,24 @@ class DokterController extends Controller
      */
      public function destroy(Dokter $dokter)
     {
+        // Check if dokter has related kunjungan or rekam medis
+        $kunjunganCount = $dokter->kunjungans()->count();
+        $rekamMedisCount = $dokter->rekamMedis()->count();
+        
+        if ($kunjunganCount > 0 || $rekamMedisCount > 0) {
+            $message = 'Dokter tidak dapat dihapus karena memiliki ';
+            $parts = [];
+            if ($kunjunganCount > 0) {
+                $parts[] = $kunjunganCount . ' kunjungan';
+            }
+            if ($rekamMedisCount > 0) {
+                $parts[] = $rekamMedisCount . ' rekam medis';
+            }
+            $message .= implode(' dan ', $parts) . ' yang terkait.';
+            
+            return redirect()->route('dokters.index')->with('error', $message);
+        }
+        
         if ($dokter->foto && Storage::disk('public')->exists($dokter->foto)) {
             Storage::disk('public')->delete($dokter->foto);
         }

@@ -91,10 +91,10 @@
                                 <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                Pilih Dokter
+                                Pilih Dokter <span class="text-red-500 ml-1">*</span>
                             </label>
                             <div class="relative">
-                                <select name="dokter_id" id="dokter_id"
+                                <select name="dokter_id" id="dokter_id" required
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white appearance-none cursor-pointer">
                                     <option value="">-- Pilih Dokter --</option>
                                     @foreach($dokters as $dokter)
@@ -109,6 +109,9 @@
                                     </svg>
                                 </div>
                             </div>
+                            @error('dokter_id')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Tanggal & Jam -->
@@ -117,42 +120,72 @@
                                 <svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                Tanggal & Jam Periksa
+                                Tanggal & Jam Periksa <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <input type="datetime-local" name="waktu_kunjungan" id="waktu_kunjungan"
+                            <input type="datetime-local" name="waktu_kunjungan" id="waktu_kunjungan" required
                                 value="{{ $kunjungan->waktu_kunjungan ? $kunjungan->waktu_kunjungan->format('Y-m-d\TH:i') : '' }}"
                                 class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white">
+                            @error('waktu_kunjungan')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Status -->
                         <div class="group">
-                            <label for="status" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                            <label class="flex items-center text-sm font-semibold text-gray-700 mb-2">
                                 <svg class="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                Status Kunjungan
+                                Status Kunjungan <span class="text-red-500 ml-1">*</span>
                             </label>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                @php
-                                    $statuses = [
-                                        'menunggu' => ['label' => 'Menunggu', 'color' => 'amber', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>'],
-                                        'disetujui' => ['label' => 'Disetujui', 'color' => 'blue', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'],
-                                        'selesai' => ['label' => 'Selesai', 'color' => 'emerald', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'],
-                                        'batal' => ['label' => 'Batal', 'color' => 'red', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'],
-                                    ];
-                                @endphp
-                                @foreach($statuses as $value => $status)
-                                    <label class="relative cursor-pointer">
-                                        <input type="radio" name="status" value="{{ $value }}" class="peer sr-only" @if($kunjungan->status == $value) checked @endif>
-                                        <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-{{ $status['color'] }}-500 peer-checked:bg-{{ $status['color'] }}-50 hover:border-gray-300 hover:bg-gray-50">
-                                            <svg class="w-6 h-6 mx-auto mb-2 text-{{ $status['color'] }}-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                {!! $status['icon'] !!}
-                                            </svg>
-                                            <span class="text-sm font-medium text-gray-700">{{ $status['label'] }}</span>
-                                        </div>
-                                    </label>
-                                @endforeach
+                                <!-- Menunggu -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="status" value="menunggu" class="peer sr-only" @if($kunjungan->status == 'menunggu') checked @endif required>
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-amber-500 peer-checked:bg-amber-50 hover:border-gray-300 hover:bg-gray-50">
+                                        <svg class="w-6 h-6 mx-auto mb-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-700">Menunggu</span>
+                                    </div>
+                                </label>
+                                
+                                <!-- Disetujui -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="status" value="disetujui" class="peer sr-only" @if($kunjungan->status == 'disetujui') checked @endif>
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50">
+                                        <svg class="w-6 h-6 mx-auto mb-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-700">Disetujui</span>
+                                    </div>
+                                </label>
+                                
+                                <!-- Selesai -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="status" value="selesai" class="peer sr-only" @if($kunjungan->status == 'selesai') checked @endif>
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:border-gray-300 hover:bg-gray-50">
+                                        <svg class="w-6 h-6 mx-auto mb-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-700">Selesai</span>
+                                    </div>
+                                </label>
+                                
+                                <!-- Batal -->
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" name="status" value="batal" class="peer sr-only" @if($kunjungan->status == 'batal') checked @endif>
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-gray-300 hover:bg-gray-50">
+                                        <svg class="w-6 h-6 mx-auto mb-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-700">Batal</span>
+                                    </div>
+                                </label>
                             </div>
+                            @error('status')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Action Buttons -->

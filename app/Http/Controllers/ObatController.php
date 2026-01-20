@@ -11,9 +11,28 @@ class ObatController extends Controller
     /**
      * Menampilkan daftar semua obat (Read).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $obats = Obat::latest()->paginate(10);
+        $query = Obat::query();
+
+        // Search by nama_obat or satuan
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama_obat', 'like', "%{$search}%")
+                  ->orWhere('satuan', 'like', "%{$search}%");
+            });
+        }
+
+        // Price range filter
+        if ($request->filled('harga_min')) {
+            $query->where('harga', '>=', $request->harga_min);
+        }
+        if ($request->filled('harga_max')) {
+            $query->where('harga', '<=', $request->harga_max);
+        }
+
+        $obats = $query->latest()->paginate(10)->withQueryString();
         return view('obats.index', compact('obats'));
     }
 

@@ -10,12 +10,30 @@ use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pembayarans = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter.user'])
-            ->latest()
-            ->paginate(10); // Menampilkan 10 data per halaman
+        $query = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter.user']);
 
+        // Search by pasien name or status
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('kunjungan.pasien', function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                })
+                ->orWhere('status_pembayaran', 'like', "%{$search}%");
+            });
+        }
+
+        // Amount range filter
+        if ($request->filled('total_min')) {
+            $query->where('total_harga', '>=', $request->total_min);
+        }
+        if ($request->filled('total_max')) {
+            $query->where('total_harga', '<=', $request->total_max);
+        }
+
+        $pembayarans = $query->latest()->paginate(10)->withQueryString();
         return view('pembayarans.index', compact('pembayarans'));
     }
 

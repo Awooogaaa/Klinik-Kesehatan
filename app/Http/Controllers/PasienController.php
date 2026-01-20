@@ -18,10 +18,33 @@ class PasienController extends Controller
     /**
      * Menampilkan daftar semua pasien (Read).
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Kita pakai `with('user')` untuk mengambil data relasi (nama, email)
-        $pasiens = Pasien::with('user')->latest()->paginate(10);
+        $query = Pasien::with('user');
+
+        // Search by nama or no_rekam_medis
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('no_rekam_medis', 'like', "%{$search}%")
+                  ->orWhere('alamat', 'like', "%{$search}%");
+            });
+        }
+
+        // Search by email
+        if ($request->filled('email')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('email', 'like', "%{$request->email}%");
+            });
+        }
+
+        // Search by phone
+        if ($request->filled('telepon')) {
+            $query->where('no_telepon', 'like', "%{$request->telepon}%");
+        }
+
+        $pasiens = $query->latest()->paginate(10)->withQueryString();
         return view('pasiens.index', compact('pasiens'));
     }
 
@@ -41,9 +64,9 @@ class PasienController extends Controller
         // 1. Validasi Data Pasien
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
-            'no_telepon' => ['required', 'string', 'max:20'],
-            'alamat' => ['required', 'string'],
-            'tanggal_lahir' => ['required', 'date'],
+            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'alamat' => ['nullable', 'string'],
+            'tanggal_lahir' => ['nullable', 'date'],
             'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
             
             // Email tidak boleh unique, karena kita mau pakai ulang email yang sudah ada
@@ -222,9 +245,9 @@ class PasienController extends Controller
     {
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
-            'no_telepon' => ['required', 'string', 'max:20'],
-            'alamat' => ['required', 'string'],
-            'tanggal_lahir' => ['required', 'date'],
+            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'alamat' => ['nullable', 'string'],
+            'tanggal_lahir' => ['nullable', 'date'],
             'jenis_kelamin' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
             'email' => ['nullable', 'string', 'email', 'max:255'],
             'password' => ['nullable', 'confirmed', ValidationRules\Password::defaults()],

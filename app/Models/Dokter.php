@@ -24,4 +24,9 @@ class Dokter extends Model
     {
         return $this->hasMany(RekamMedis::class);
     }
+    
+    public function kunjungans()
+    {
+        return $this->hasMany(Kunjungan::class);
+    }
 }

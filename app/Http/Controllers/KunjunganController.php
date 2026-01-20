@@ -9,9 +9,33 @@ use Illuminate\Http\Request;
 
 class KunjunganController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $kunjungans = Kunjungan::with(['pasien', 'dokter'])->latest()->paginate(10);
+        $query = Kunjungan::with(['pasien', 'dokter.user']);
+
+        // Search by pasien name, keluhan, or dokter name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('pasien', function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                })
+                ->orWhere('keluhan_awal', 'like', "%{$search}%")
+                ->orWhereHas('dokter.user', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('waktu_kunjungan', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('waktu_kunjungan', '<=', $request->date_to);
+        }
+
+        $kunjungans = $query->latest()->paginate(10)->withQueryString();
         return view('kunjungans.index', compact('kunjungans'));
     }
 
@@ -51,8 +75,8 @@ class KunjunganController extends Controller
         $request->validate([
             'pasien_id' => 'required|exists:pasiens,id',
             'keluhan_awal' => 'required|string',
-            'dokter_id' => 'nullable|exists:dokters,id',
-            'waktu_kunjungan' => 'nullable|date',
+            'dokter_id' => 'required|exists:dokters,id',
+            'waktu_kunjungan' => 'required|date',
             'status' => 'required|in:menunggu,disetujui,selesai,batal',
         ]);
 

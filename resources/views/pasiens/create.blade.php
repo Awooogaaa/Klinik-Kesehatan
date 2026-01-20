@@ -77,9 +77,9 @@
                                         <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                         </svg>
-                                        No. Telepon <span class="text-red-500 ml-1">*</span>
+                                        No. Telepon
                                     </label>
-                                    <input type="text" id="no_telepon" name="no_telepon" value="{{ old('no_telepon') }}" required
+                                    <input type="text" id="no_telepon" name="no_telepon" value="{{ old('no_telepon') }}"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white"
                                         placeholder="08xxxxxxxxxx">
                                     @error('no_telepon')
@@ -92,9 +92,9 @@
                                         <svg class="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
-                                        Tanggal Lahir <span class="text-red-500 ml-1">*</span>
+                                        Tanggal Lahir
                                     </label>
-                                    <input type="date" id="tanggal_lahir" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" required
+                                    <input type="date" id="tanggal_lahir" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white">
                                     @error('tanggal_lahir')
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>

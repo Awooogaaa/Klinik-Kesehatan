@@ -74,16 +74,15 @@
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
                             <div class="relative">
-                                <input type="text" id="satuan" name="satuan" value="{{ old('satuan') }}" required
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
-                                    placeholder="tablet, botol, strip, kapsul...">
+                                <select id="satuan" name="satuan" required
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white">
+                                    <option value="" disabled {{ old('satuan') ? '' : 'selected' }}>Pilih satuan...</option>
+                                    <option value="Tablet" {{ old('satuan') == 'Tablet' ? 'selected' : '' }}>Tablet</option>
+                                    <option value="Botol" {{ old('satuan') == 'Botol' ? 'selected' : '' }}>Botol</option>
+                                    <option value="Strip" {{ old('satuan') == 'Strip' ? 'selected' : '' }}>Strip</option>
+                                    <option value="Kapsul" {{ old('satuan') == 'Kapsul' ? 'selected' : '' }}>Kapsul</option>
+                                </select>
                             </div>
-                            <p class="mt-2 text-xs text-gray-500 flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Contoh: tablet, botol, strip, kapsul, ampul
-                            </p>
                             @error('satuan')
                                 <p class="mt-2 text-sm text-red-600 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

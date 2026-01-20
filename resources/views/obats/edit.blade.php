@@ -91,15 +91,14 @@
                                 Satuan
                                 <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <input type="text" id="satuan" name="satuan" value="{{ old('satuan', $obat->satuan) }}" required
-                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
-                                placeholder="tablet, botol, strip, kapsul...">
-                            <p class="mt-2 text-xs text-gray-500 flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Contoh: tablet, botol, strip, kapsul, ampul
-                            </p>
+                            <select id="satuan" name="satuan" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white">
+                                <option value="" disabled>Pilih satuan...</option>
+                                <option value="Tablet" {{ old('satuan', $obat->satuan) == 'Tablet' ? 'selected' : '' }}>Tablet</option>
+                                <option value="Botol" {{ old('satuan', $obat->satuan) == 'Botol' ? 'selected' : '' }}>Botol</option>
+                                <option value="Strip" {{ old('satuan', $obat->satuan) == 'Strip' ? 'selected' : '' }}>Strip</option>
+                                <option value="Kapsul" {{ old('satuan', $obat->satuan) == 'Kapsul' ? 'selected' : '' }}>Kapsul</option>
+                            </select>
                             @error('satuan')
                                 <p class="mt-2 text-sm text-red-600 flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,16 +184,13 @@
 
                         <!-- Action Buttons -->
                         <div class="flex items-center justify-between pt-6 border-t border-gray-100">
-                            <form action="{{ route('obats.destroy', $obat) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus obat {{ $obat->nama_obat }}?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="inline-flex items-center px-4 py-2.5 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all duration-200">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                    Hapus Obat
-                                </button>
-                            </form>
+                            <!-- Delete Button (using JavaScript form submit instead of nested form) -->
+                            <button type="button" onclick="if(confirm('Apakah Anda yakin ingin menghapus obat {{ $obat->nama_obat }}?')) { document.getElementById('delete-form').submit(); }" class="inline-flex items-center px-4 py-2.5 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Hapus Obat
+                            </button>
                             
                             <div class="flex items-center space-x-4">
                                 <a href="{{ route('obats.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
@@ -211,6 +207,12 @@
                                 </button>
                             </div>
                         </div>
+                    </form>
+                    
+                    <!-- Hidden Delete Form -->
+                    <form id="delete-form" action="{{ route('obats.destroy', $obat) }}" method="POST" class="hidden">
+                        @csrf
+                        @method('DELETE')
                     </form>
                 </div>
             </div>

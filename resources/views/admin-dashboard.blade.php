@@ -36,9 +36,14 @@
                             </div>
                         </div>
                         <div class="hidden md:block text-right">
-                            <p class="text-purple-100 text-sm">{{ now()->format('l, d F Y') }}</p>
-                            <p class="text-white text-lg font-semibold">{{ now()->format('H:i') }} WIB</p>
-                        </div>
+    {{-- Menggunakan Carbon untuk set timezone ke Jakarta dan format bahasa Indonesia --}}
+    <p class="text-purple-100 text-sm">
+        {{ now()->setTimezone('Asia/Jakarta')->translatedFormat('l, d F Y') }}
+    </p>
+    <p class="text-white text-lg font-semibold">
+        {{ now()->setTimezone('Asia/Jakarta')->format('H:i') }} WIB
+    </p>
+</div>
                     </div>
                 </div>
             </div>

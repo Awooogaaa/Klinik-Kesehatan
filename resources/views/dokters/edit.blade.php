@@ -173,7 +173,7 @@
                                     </label>
                                     
                                     @if($dokter->foto)
-                                        <div class="mb-4 flex items-center space-x-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                                        <div id="current-foto" class="mb-4 flex items-center space-x-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                                             <img src="{{ asset('storage/' . $dokter->foto) }}" alt="Foto Dokter" class="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-md">
                                             <div>
                                                 <p class="text-sm font-medium text-blue-800">Foto Saat Ini</p>
@@ -181,6 +181,15 @@
                                             </div>
                                         </div>
                                     @endif
+                                    
+                                    <!-- New Image Preview -->
+                                    <div id="preview-container" class="hidden mb-4 flex items-center space-x-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                                        <img id="preview-image" src="" alt="Preview" class="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-md">
+                                        <div>
+                                            <p class="text-sm font-medium text-emerald-800">Foto Baru (Preview)</p>
+                                            <p id="preview-filename" class="text-xs text-emerald-600 mt-1"></p>
+                                        </div>
+                                    </div>
 
                                     <div class="flex items-center justify-center w-full">
                                         <label for="foto" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors duration-200">
@@ -191,12 +200,34 @@
                                                 <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk upload</span> atau drag and drop</p>
                                                 <p class="text-xs text-gray-400">Biarkan kosong jika tidak ingin mengubah foto</p>
                                             </div>
-                                            <input id="foto" type="file" name="foto" class="hidden" accept="image/*" />
+                                            <input id="foto" type="file" name="foto" class="hidden" accept="image/*" onchange="previewImage(this)" />
                                         </label>
                                     </div>
                                     @error('foto')
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
+                                    
+                                    <script>
+                                        function previewImage(input) {
+                                            const container = document.getElementById('preview-container');
+                                            const image = document.getElementById('preview-image');
+                                            const filename = document.getElementById('preview-filename');
+                                            const currentFoto = document.getElementById('current-foto');
+                                            
+                                            if (input.files && input.files[0]) {
+                                                const reader = new FileReader();
+                                                reader.onload = function(e) {
+                                                    image.src = e.target.result;
+                                                    filename.textContent = input.files[0].name;
+                                                    container.classList.remove('hidden');
+                                                    if (currentFoto) {
+                                                        currentFoto.classList.add('hidden');
+                                                    }
+                                                }
+                                                reader.readAsDataURL(input.files[0]);
+                                            }
+                                        }
+                                    </script>
                                 </div>
 
                                 <div class="md:col-span-2 group">
@@ -218,16 +249,13 @@
 
                         <!-- Action Buttons -->
                         <div class="flex items-center justify-between pt-6 border-t border-gray-100">
-                            <form action="{{ route('dokters.destroy', $dokter) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus dokter ini? Akun login juga akan terhapus.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="inline-flex items-center px-4 py-2.5 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all duration-200">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                    Hapus Dokter
-                                </button>
-                            </form>
+                            <!-- Delete Button (using JavaScript form submit) -->
+                            <button type="button" onclick="if(confirm('Yakin hapus dokter ini? Akun login juga akan terhapus.')) { document.getElementById('delete-form').submit(); }" class="inline-flex items-center px-4 py-2.5 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Hapus Dokter
+                            </button>
                             
                             <div class="flex items-center space-x-4">
                                 <a href="{{ route('dokters.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
@@ -244,6 +272,12 @@
                                 </button>
                             </div>
                         </div>
+                    </form>
+                    
+                    <!-- Hidden Delete Form -->
+                    <form id="delete-form" action="{{ route('dokters.destroy', $dokter) }}" method="POST" class="hidden">
+                        @csrf
+                        @method('DELETE')
                     </form>
                 </div>
             </div>

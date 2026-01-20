@@ -145,9 +145,25 @@
                                             Siapa yang akan berobat?
                                         </span>
                                     </label>
-                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    
+                                    {{-- Search Bar for Family Members --}}
+                                    @if($keluarga->count() > 4)
+                                    <div class="mb-4">
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                                </svg>
+                                            </div>
+                                            <input type="text" id="searchKeluarga" onkeyup="filterKeluarga()" placeholder="Cari nama anggota keluarga..." 
+                                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm transition-all bg-white">
+                                        </div>
+                                    </div>
+                                    @endif
+                                    
+                                    <div id="keluargaList" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                         @foreach ($keluarga as $index => $anggota)
-                                            <label class="relative cursor-pointer">
+                                            <label class="relative cursor-pointer keluarga-item" data-nama="{{ strtolower($anggota->nama) }}">
                                                 <input type="radio" name="pasien_id" value="{{ $anggota->id }}" class="peer sr-only" {{ $index == 0 ? 'checked' : '' }}>
                                                 <div class="p-4 border-2 border-gray-200 rounded-2xl text-center transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-white peer-checked:shadow-lg hover:border-gray-300 bg-white">
                                                     <div class="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center text-lg font-bold text-white shadow {{ $anggota->jenis_kelamin == 'Laki-laki' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' : 'bg-gradient-to-br from-pink-400 to-rose-500' }}">
@@ -159,6 +175,17 @@
                                             </label>
                                         @endforeach
                                     </div>
+                                    
+                                    <script>
+                                        function filterKeluarga() {
+                                            const search = document.getElementById('searchKeluarga').value.toLowerCase();
+                                            const items = document.querySelectorAll('.keluarga-item');
+                                            items.forEach(item => {
+                                                const nama = item.getAttribute('data-nama');
+                                                item.style.display = nama.includes(search) ? '' : 'none';
+                                            });
+                                        }
+                                    </script>
                                 </div>
                                 
                                 {{-- Keluhan --}}
@@ -213,9 +240,15 @@
                                     <option value="Laki-laki">Laki-laki</option>
                                     <option value="Perempuan">Perempuan</option>
                                 </select>
-                                <input type="date" name="tanggal_lahir" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required />
+                                <div>
+                                    <input type="date" name="tanggal_lahir" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required />
+                                    <p class="text-xs text-gray-400 mt-1 ml-1">📅 Tanggal Lahir</p>
+                                </div>
                             </div>
-                            <input type="text" name="no_telepon" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="No. HP / WhatsApp" required />
+                            <div>
+                                <input type="tel" name="no_telepon" pattern="[0-9]*" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="No. HP / WhatsApp (angka saja)" required />
+                                <p class="text-xs text-gray-400 mt-1 ml-1">📱 Hanya boleh angka, contoh: 08123456789</p>
+                            </div>
                             <textarea name="alamat" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" rows="2" placeholder="Alamat Domisili" required></textarea>
                             <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
                                 <span class="flex items-center justify-center">
@@ -266,7 +299,7 @@
             {{-- RIWAYAT & STATUS KUNJUNGAN --}}
             <div id="riwayat-medis" class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                 <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div class="flex items-center space-x-4">
                             <div class="p-3 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl shadow-lg">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,14 +312,38 @@
                             </div>
                         </div>
                         
-                        {{-- Legend Status --}}
-                        <div class="hidden md:flex items-center space-x-4 text-xs">
-                            <span class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-1.5"></span>Menunggu</span>
-                            <span class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Dijadwalkan</span>
-                            <span class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Selesai</span>
+                        {{-- Search Bar for Riwayat --}}
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </div>
+                                <input type="text" id="searchRiwayat" onkeyup="filterRiwayat()" placeholder="Cari nama atau tanggal..." 
+                                    class="w-full md:w-64 pl-10 pr-4 py-2 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm transition-all">
+                            </div>
+                            
+                            {{-- Legend Status --}}
+                            <div class="hidden lg:flex items-center space-x-4 text-xs">
+                                <span class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-1.5"></span>Menunggu</span>
+                                <span class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Dijadwalkan</span>
+                                <span class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Selesai</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <script>
+                    function filterRiwayat() {
+                        const search = document.getElementById('searchRiwayat').value.toLowerCase();
+                        const rows = document.querySelectorAll('.riwayat-row');
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(search) ? '' : 'none';
+                        });
+                    }
+                </script>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100">
@@ -301,7 +358,7 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
                             @forelse($riwayat as $kunjungan)
-                                <tr x-data="{ openJadwal: false, openRekam: false }" class="hover:bg-blue-50/50 transition duration-200 group">
+                                <tr x-data="{ openJadwal: false, openRekam: false }" class="hover:bg-blue-50/50 transition duration-200 group riwayat-row">
                                     
                                     <td class="px-6 py-5 whitespace-nowrap">
                                         <div class="text-sm font-bold text-gray-900">{{ $kunjungan->created_at->format('d M Y') }}</div>
@@ -383,7 +440,7 @@
                                                 </button>
                                             </form>
                                         @elseif($kunjungan->status == 'disetujui')
-                                            <button @click="openJadwal = true" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all">
+                                            <button x-on:click="openJadwal = true" type="button" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer">
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                 </svg>
@@ -391,8 +448,8 @@
                                             </button>
 
                                             {{-- MODAL JADWAL --}}
-                                            <div x-show="openJadwal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
-                                                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" @click="openJadwal = false"></div>
+                                            <div x-show="openJadwal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
+                                                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" x-on:click="openJadwal = false"></div>
                                                 <div class="bg-white rounded-3xl shadow-2xl transform transition-all sm:w-full sm:max-w-md relative z-10 overflow-hidden">
                                                     <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white text-center">
                                                         <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -435,12 +492,12 @@
                                                         </div>
                                                     </div>
                                                     <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                                                        <button type="button" class="w-full py-3 bg-white border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition" @click="openJadwal = false">Tutup</button>
+                                                        <button type="button" class="w-full py-3 bg-white border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition" x-on:click="openJadwal = false">Tutup</button>
                                                     </div>
                                                 </div>
                                             </div>
                                         @elseif($kunjungan->status == 'selesai')
-                                            <button @click="openRekam = true" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all">
+                                            <button x-on:click="openRekam = true" type="button" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer">
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                                 </svg>
@@ -448,8 +505,8 @@
                                             </button>
 
                                             {{-- MODAL REKAM MEDIS --}}
-                                            <div x-show="openRekam" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
-                                                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" @click="openRekam = false"></div>
+                                            <div x-show="openRekam" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
+                                                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" x-on:click="openRekam = false"></div>
                                                 <div class="bg-white rounded-3xl shadow-2xl transform transition-all sm:w-full sm:max-w-lg relative z-10 max-h-[90vh] overflow-y-auto">
                                                     <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white">
                                                         <div class="flex justify-between items-center">
@@ -512,7 +569,7 @@
                                                         @endif
                                                     </div>
                                                     <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                                                        <button type="button" class="w-full py-3 bg-white border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition" @click="openRekam = false">Tutup</button>
+                                                        <button type="button" class="w-full py-3 bg-white border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition" x-on:click="openRekam = false">Tutup</button>
                                                     </div>
                                                 </div>
                                             </div>
