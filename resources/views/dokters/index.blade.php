@@ -95,12 +95,20 @@
                             <h3 class="text-lg font-semibold text-gray-800">Daftar Dokter</h3>
                         </div>
                         
-                        <a href="{{ route('dokters.create') }}" class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:-translate-y-0.5 transition-all duration-200">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                            Tambah Dokter Baru
-                        </a>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('dokters.trackrecord') }}" class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:from-violet-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transform hover:-translate-y-0.5 transition-all duration-200">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Track Record
+                            </a>
+                            <a href="{{ route('dokters.create') }}" class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:-translate-y-0.5 transition-all duration-200">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Tambah Dokter Baru
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -281,6 +289,18 @@
 
                                                         <!-- Modal Body -->
                                                         <div class="px-6 py-6 bg-white">
+                                                            <!-- Statistik Pemeriksaan -->
+                                                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                                                <div class="bg-gradient-to-br from-violet-500 to-purple-600 p-4 rounded-xl text-white text-center">
+                                                                    <p class="text-3xl font-bold">{{ $dokter->rekamMedis()->count() }}</p>
+                                                                    <p class="text-violet-100 text-xs font-medium mt-1">Total Pemeriksaan</p>
+                                                                </div>
+                                                                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-xl text-white text-center">
+                                                                    <p class="text-3xl font-bold">{{ $dokter->kunjungans()->count() }}</p>
+                                                                    <p class="text-emerald-100 text-xs font-medium mt-1">Total Kunjungan</p>
+                                                                </div>
+                                                            </div>
+                                                            
                                                             <div class="space-y-4">
                                                                 <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
                                                                     <div class="flex-shrink-0 p-2 bg-blue-100 rounded-lg">

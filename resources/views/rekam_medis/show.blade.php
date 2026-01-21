@@ -130,53 +130,22 @@
                                 </svg>
                             </div>
                             <h3 class="font-bold text-gray-800">Resep Obat</h3>
+                            <span class="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">Beli di luar klinik</span>
                         </div>
-                        <div class="overflow-x-auto rounded-xl border border-emerald-200">
-                            <table class="min-w-full divide-y divide-emerald-200">
-                                <thead>
-                                    <tr class="bg-gradient-to-r from-emerald-50 to-teal-50">
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">Nama Obat</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">Jumlah</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">Dosis</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-100">
-                                    @forelse ($rekamMedis->obats as $obat)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div class="p-2 bg-emerald-100 rounded-lg mr-3">
-                                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                                                        </svg>
-                                                    </div>
-                                                    <span class="font-semibold text-gray-900">{{ $obat->nama_obat }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-semibold bg-blue-100 text-blue-700">
-                                                    {{ $obat->pivot->jumlah }} {{ $obat->satuan }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ $obat->pivot->dosis }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="3" class="px-6 py-8 text-center">
-                                                <div class="flex flex-col items-center">
-                                                    <div class="p-3 bg-gray-100 rounded-full mb-3">
-                                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                                                        </svg>
-                                                    </div>
-                                                    <p class="text-gray-500">Tidak ada resep obat</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                        @if($rekamMedis->catatan_obat)
+                            <div class="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                                <pre class="text-gray-800 text-sm whitespace-pre-wrap font-mono bg-white p-4 rounded-lg border border-emerald-100">{{ $rekamMedis->catatan_obat }}</pre>
+                            </div>
+                        @else
+                            <div class="p-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 text-center">
+                                <div class="p-3 bg-gray-100 rounded-full w-fit mx-auto mb-3">
+                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-500">Tidak ada resep obat</p>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Action Buttons -->

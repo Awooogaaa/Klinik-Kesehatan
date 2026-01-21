@@ -114,30 +114,34 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                 </svg>
                                             </div>
-                                            <span class="text-gray-700 font-medium">Jasa Konsultasi Dokter</span>
+                                            <span class="text-gray-700 font-medium">Biaya Pemeriksaan Dokter</span>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-6 text-right font-semibold text-gray-900">Rp {{ number_format($pembayaran->kunjungan->dokter->biaya_jasa ?? 50000, 0, ',', '.') }}</td>
+                                    <td class="py-4 px-6 text-right font-semibold text-gray-900">Rp {{ number_format($pembayaran->kunjungan->rekamMedis->biaya_pemeriksaan ?? 0, 0, ',', '.') }}</td>
                                 </tr>
                                 
-                                @foreach($pembayaran->kunjungan->rekamMedis->obats as $obat)
+                                @if($pembayaran->kunjungan->rekamMedis && $pembayaran->kunjungan->rekamMedis->tindakanMedis)
+                                @foreach($pembayaran->kunjungan->rekamMedis->tindakanMedis as $tindakan)
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="py-4 px-6">
                                         <div class="flex items-center">
-                                            <div class="p-2 bg-emerald-100 rounded-lg mr-3">
-                                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="p-2 bg-amber-100 rounded-lg mr-3">
+                                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                                                 </svg>
                                             </div>
                                             <div>
-                                                <span class="text-gray-700 font-medium">{{ $obat->nama_obat }}</span>
-                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ $obat->pivot->jumlah }}x</span>
+                                                <span class="text-gray-700 font-medium">{{ $tindakan->nama_tindakan }}</span>
+                                                @if($tindakan->keterangan)
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ $tindakan->keterangan }}</span>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-6 text-right font-semibold text-gray-900">Rp {{ number_format($obat->harga * $obat->pivot->jumlah, 0, ',', '.') }}</td>
+                                    <td class="py-4 px-6 text-right font-semibold text-gray-900">Rp {{ number_format($tindakan->biaya, 0, ',', '.') }}</td>
                                 </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                             <tfoot>
                                 <tr class="bg-gradient-to-r from-green-50 to-emerald-50">

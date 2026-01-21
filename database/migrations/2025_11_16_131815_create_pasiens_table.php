@@ -18,11 +18,13 @@ return new class extends Migration
                   ->onDelete('set null');
             
             $table->string('nama'); 
+            $table->string('nik', 16)->nullable(); // NIK 16 digit
             $table->unsignedBigInteger('no_rekam_medis')->unique()->nullable();
             $table->string('no_telepon')->nullable();
             $table->text('alamat')->nullable();
             $table->date('tanggal_lahir')->nullable();
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable();
+            $table->string('hubungan')->nullable(); // Hubungan dengan pemilik akun
             
             $table->timestamps();
         });

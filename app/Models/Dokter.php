@@ -29,4 +29,13 @@ class Dokter extends Model
     {
         return $this->hasMany(Kunjungan::class);
     }
+
+    /**
+     * Relasi many-to-many ke Perawat yang membantu dokter ini.
+     */
+    public function perawats()
+    {
+        return $this->belongsToMany(Perawat::class, 'dokter_perawat')
+                    ->withTimestamps();
+    }
 }

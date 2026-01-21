@@ -36,6 +36,64 @@ class DokterController extends Controller
     }
 
     /**
+     * Menampilkan detail dokter beserta statistik pemeriksaan.
+     */
+    public function show(Dokter $dokter)
+    {
+        $dokter->load(['user', 'rekamMedis.pasien', 'kunjungans.pasien']);
+        
+        // Hitung statistik
+        $totalPemeriksaan = $dokter->rekamMedis()->count();
+        $totalKunjungan = $dokter->kunjungans()->count();
+        
+        // Daftar pemeriksaan terakhir
+        $riwayatPemeriksaan = $dokter->rekamMedis()
+            ->with(['pasien', 'kunjungan'])
+            ->latest()
+            ->take(10)
+            ->get();
+        
+        return view('dokters.show', compact('dokter', 'totalPemeriksaan', 'totalKunjungan', 'riwayatPemeriksaan'));
+    }
+
+    /**
+     * Menampilkan track record semua dokter.
+     */
+    public function trackRecord(Request $request)
+    {
+        $query = Dokter::with('user')
+            ->withCount('rekamMedis')
+            ->withCount('kunjungans');
+        
+        // Filter by dokter
+        if ($request->filled('dokter_id')) {
+            $query->where('id', $request->dokter_id);
+        }
+        
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+        
+        $dokters = $query->orderBy('rekam_medis_count', 'desc')->paginate(10)->withQueryString();
+        $allDokters = Dokter::with('user')->get(); // untuk dropdown filter
+        
+        // Ambil riwayat pemeriksaan terbaru dari semua dokter
+        $riwayatPemeriksaan = \App\Models\RekamMedis::with(['dokter.user', 'pasien', 'kunjungan'])
+            ->when($request->filled('dokter_id'), function($q) use ($request) {
+                $q->where('dokter_id', $request->dokter_id);
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+        
+        return view('dokters.trackrecord', compact('dokters', 'allDokters', 'riwayatPemeriksaan'));
+    }
+
+    /**
      * Menampilkan form untuk membuat dokter baru.
      */
     public function create()

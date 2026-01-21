@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RekamMedis extends Model
 {
@@ -35,17 +35,37 @@ class RekamMedis extends Model
     }
 
     /**
-     * Relasi many-to-many ke Obat (Resep).
-     * Satu rekam medis bisa memiliki banyak obat.
+     * Relasi ke Kunjungan.
      */
-    public function obats(): BelongsToMany
-    {
-        return $this->belongsToMany(Obat::class, 'obat_rekam_medis')
-                    ->withPivot('jumlah', 'dosis'); // Penting!
-    }
-
     public function kunjungan()
     {
         return $this->belongsTo(Kunjungan::class);
+    }
+
+    /**
+     * Relasi ke User yang menginput rekam medis.
+     */
+    public function inputBy()
+    {
+        return $this->belongsTo(User::class, 'input_by_user_id');
+    }
+
+    /**
+     * Relasi ke Tindakan Medis (suntik, infus, dll).
+     */
+    public function tindakanMedis(): HasMany
+    {
+        return $this->hasMany(TindakanRekamMedis::class);
+    }
+
+    /**
+     * Helper untuk menghitung total biaya.
+     * Total = Biaya Pemeriksaan + Total Tindakan Medis
+     */
+    public function getTotalBiayaAttribute(): int
+    {
+        $biayaPemeriksaan = $this->biaya_pemeriksaan ?? 0;
+        $biayaTindakan = $this->tindakanMedis->sum('biaya');
+        return $biayaPemeriksaan + $biayaTindakan;
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PasienController;
 use App\Http\Controllers\DokterController;
+use App\Http\Controllers\PerawatController;
 use App\Http\Controllers\RekamMedisController;
 use App\Http\Controllers\KunjunganController;
 use App\Http\Controllers\PembayaranController;
@@ -48,11 +49,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// --- GROUP SHARED: ADMIN & DOKTER (Resource yang bisa diakses keduanya) ---
-Route::middleware(['auth', 'role:admin,dokter'])->group(function () {
-    // Resource yang digunakan bersama
-    Route::resource('obats', ObatController::class);
+// --- GROUP SHARED: ADMIN, DOKTER & PERAWAT ---
+Route::middleware(['auth', 'role:admin,dokter,perawat'])->group(function () {
+    // Rekam Medis (Perawat juga bisa akses)
     Route::resource('rekam_medis', RekamMedisController::class);
+});
+
+// --- GROUP SHARED: ADMIN & DOKTER ---
+Route::middleware(['auth', 'role:admin,dokter'])->group(function () {
+    Route::resource('obats', ObatController::class);
     Route::resource('kunjungans', KunjunganController::class);
 });
 
@@ -104,7 +109,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Manajemen User (Hanya Admin)
     Route::resource('pasiens', PasienController::class); 
+    
+    // Track Record Dokter (harus sebelum resource untuk menghindari konflik dengan {dokter})
+    Route::get('/dokters/trackrecord', [DokterController::class, 'trackRecord'])->name('dokters.trackrecord');
     Route::resource('dokters', DokterController::class);
+    
+    // Manajemen Perawat (Hanya Admin)
+    Route::get('/perawats/{perawat}/assign', [PerawatController::class, 'assignForm'])->name('perawats.assign');
+    Route::post('/perawats/{perawat}/assign', [PerawatController::class, 'assign'])->name('perawats.assign.store');
+    Route::resource('perawats', PerawatController::class);
 });
 
 
@@ -115,6 +128,12 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
     Route::get('/dokter-dashboard', function () {
         return view('dokter-dashboard');
     })->name('dokter-dashboard');
+});
+
+// --- GROUP KHUSUS PERAWAT ---
+Route::middleware(['auth', 'role:perawat'])->group(function () {
+    // Dashboard Khusus Perawat
+    Route::get('/perawat-dashboard', [PerawatController::class, 'dashboard'])->name('perawat-dashboard');
 });
 
 // --- GROUP KHUSUS PASIEN ---
@@ -135,6 +154,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/pembayarans', [PembayaranController::class, 'index'])->name('pembayarans.index');
     Route::post('/admin/pembayarans/{id}/confirm', [PembayaranController::class, 'confirmOffline'])->name('pembayarans.confirmOffline');
     Route::delete('/admin/pembayarans/{id}', [PembayaranController::class, 'destroy'])->name('pembayarans.destroy');
+    
+    // Route Nota untuk Admin (bisa akses nota semua pasien)
+    Route::get('/admin/nota/{id}', [PasienController::class, 'nota'])->name('admin.nota');
 
 });
 

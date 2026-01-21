@@ -27,9 +27,9 @@
                     $hariIni = $rekamMedis->filter(function($rm) {
                         return $rm->created_at->isToday();
                     })->count();
-                    $denganObat = $rekamMedis->filter(function($rm) {
-                        return $rm->obats->count() > 0;
-                    })->count();
+                    $totalBiaya = $rekamMedis->sum(function($rm) {
+                        return $rm->total_biaya;
+                    });
                 @endphp
                 
                 <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-5 text-white shadow-lg shadow-rose-500/30 transform hover:scale-105 transition-all duration-300">
@@ -63,12 +63,12 @@
                 <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-500/30 transform hover:scale-105 transition-all duration-300">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-emerald-100 text-sm font-medium">Dengan Resep</p>
-                            <p class="text-3xl font-bold mt-1">{{ $denganObat }}</p>
+                            <p class="text-emerald-100 text-sm font-medium">Total Pendapatan</p>
+                            <p class="text-2xl font-bold mt-1">Rp {{ number_format($totalBiaya, 0, ',', '.') }}</p>
                         </div>
                         <div class="bg-white/20 p-3 rounded-xl">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                     </div>
@@ -77,12 +77,12 @@
                 <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 transition-all duration-300">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-blue-100 text-sm font-medium">Tanpa Resep</p>
-                            <p class="text-3xl font-bold mt-1">{{ $rekamMedis->count() - $denganObat }}</p>
+                            <p class="text-blue-100 text-sm font-medium">Dengan Tindakan</p>
+                            <p class="text-3xl font-bold mt-1">{{ $rekamMedis->filter(fn($rm) => $rm->tindakanMedis->count() > 0)->count() }}</p>
                         </div>
                         <div class="bg-white/20 p-3 rounded-xl">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                             </svg>
                         </div>
                     </div>
@@ -149,7 +149,7 @@
                                 </div>
                                 <h4 class="text-sm font-semibold text-gray-700">Filter & Pencarian</h4>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div class="relative">
                                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pasien/Diagnosa</label>
                                     <div class="relative">
@@ -157,15 +157,6 @@
                                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                         </div>
                                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 text-sm transition-all duration-200">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Nama Obat</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                                        </div>
-                                        <input type="text" name="obat" value="{{ request('obat') }}" placeholder="Cari obat..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 text-sm transition-all duration-200">
                                     </div>
                                 </div>
                                 <div>
@@ -208,7 +199,7 @@
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Pasien</th>
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Dokter</th>
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Diagnosa</th>
-                                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Resep Obat</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Total Biaya</th>
                                     <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
@@ -257,21 +248,13 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            @if ($rm->obats->count() > 0)
-                                                <div class="flex flex-wrap gap-1">
-                                                    @foreach ($rm->obats->take(2) as $obat)
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border border-emerald-200">
-                                                            {{ $obat->nama_obat }} ({{ $obat->pivot->jumlah }})
-                                                        </span>
-                                                    @endforeach
-                                                    @if ($rm->obats->count() > 2)
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600">
-                                                            +{{ $rm->obats->count() - 2 }} lainnya
-                                                        </span>
-                                                    @endif
+                                            <div class="text-sm font-semibold text-emerald-600">
+                                                Rp {{ number_format($rm->total_biaya, 0, ',', '.') }}
+                                            </div>
+                                            @if($rm->tindakanMedis->count() > 0)
+                                                <div class="text-xs text-gray-500">
+                                                    +{{ $rm->tindakanMedis->count() }} tindakan
                                                 </div>
-                                            @else
-                                                <span class="text-gray-400 italic text-xs">Tidak ada obat</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -291,7 +274,7 @@
                                                     Edit
                                                 </a>
                                                 
-                                                <form action="{{ route('rekam_medis.destroy', $rm->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus data ini? PERINGATAN: Stok obat yang sudah diambil TIDAK AKAN kembali.');">
+                                                <form action="{{ route('rekam_medis.destroy', $rm->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus data ini?');">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-red-500 to-rose-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-red-600 hover:to-rose-700 transform hover:-translate-y-0.5 transition-all duration-200">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,19 +371,36 @@
                     <p id="d-diagnosa" class="text-gray-900 bg-white p-3 rounded-lg border border-rose-100"></p>
                 </div>
 
-                <div class="mt-4">
-                    <span class="text-xs text-emerald-600 uppercase font-bold block mb-2">Resep Obat</span>
-                    <div class="border border-emerald-200 rounded-xl overflow-hidden">
-                        <table class="min-w-full divide-y divide-emerald-200">
-                            <thead class="bg-gradient-to-r from-emerald-50 to-teal-50">
+                <div class="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                    <span class="text-xs text-emerald-600 uppercase font-bold block mb-2">Biaya Pemeriksaan</span>
+                    <p id="d-biaya" class="text-emerald-700 font-bold text-xl"></p>
+                </div>
+
+                <div id="d-catatan-obat-section" class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                    <span class="text-xs text-green-600 uppercase font-bold block mb-2">Resep Obat</span>
+                    <pre id="d-catatan-obat" class="text-gray-800 bg-white p-3 rounded-lg border border-green-100 text-sm font-mono whitespace-pre-wrap"></pre>
+                </div>
+
+                <div id="d-tindakan-section" class="mt-4">
+                    <span class="text-xs text-amber-600 uppercase font-bold block mb-2">Tindakan Medis Tambahan</span>
+                    <div class="border border-amber-200 rounded-xl overflow-hidden">
+                        <table class="min-w-full divide-y divide-amber-200">
+                            <thead class="bg-gradient-to-r from-amber-50 to-orange-50">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-emerald-700 uppercase">Nama Obat</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-emerald-700 uppercase">Jumlah</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-emerald-700 uppercase">Dosis</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase">Nama Tindakan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase">Biaya</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase">Keterangan</th>
                                 </tr>
                             </thead>
-                            <tbody id="d-obat-list" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
+                            <tbody id="d-tindakan-list" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl text-white">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold">Total Biaya</span>
+                        <span id="d-total" class="text-2xl font-bold"></span>
                     </div>
                 </div>
 
@@ -448,23 +448,42 @@
 
                 document.getElementById('d-diagnosa').textContent = rm.diagnosa || '-';
                 document.getElementById('d-keluhan').textContent = rm.keluhan || '-';
-                
-                const obatBody = document.getElementById('d-obat-list');
-                obatBody.innerHTML = '';
+                document.getElementById('d-biaya').textContent = 'Rp ' + (rm.biaya_pemeriksaan || 0).toLocaleString('id-ID');
 
-                if(rm.obats && rm.obats.length > 0) {
-                    rm.obats.forEach(obat => {
+                // Catatan Obat
+                const catatanSection = document.getElementById('d-catatan-obat-section');
+                if (rm.catatan_obat) {
+                    document.getElementById('d-catatan-obat').textContent = rm.catatan_obat;
+                    catatanSection.classList.remove('hidden');
+                } else {
+                    catatanSection.classList.add('hidden');
+                }
+
+                // Tindakan Medis
+                const tindakanSection = document.getElementById('d-tindakan-section');
+                const tindakanBody = document.getElementById('d-tindakan-list');
+                tindakanBody.innerHTML = '';
+
+                let totalTindakan = 0;
+                if (rm.tindakan_medis && rm.tindakan_medis.length > 0) {
+                    rm.tindakan_medis.forEach(t => {
+                        totalTindakan += t.biaya || 0;
                         const row = `
                             <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium">${obat.nama_obat}</td>
-                                <td class="px-4 py-3">${obat.pivot?.jumlah || '-'}</td>
-                                <td class="px-4 py-3">${obat.pivot?.dosis || '-'}</td>
+                                <td class="px-4 py-3 font-medium">${t.nama_tindakan}</td>
+                                <td class="px-4 py-3">Rp ${(t.biaya || 0).toLocaleString('id-ID')}</td>
+                                <td class="px-4 py-3 text-gray-500">${t.keterangan || '-'}</td>
                             </tr>`;
-                        obatBody.innerHTML += row;
+                        tindakanBody.innerHTML += row;
                     });
+                    tindakanSection.classList.remove('hidden');
                 } else {
-                    obatBody.innerHTML = `<tr><td colspan="3" class="px-4 py-3 text-center text-gray-400 italic">Tidak ada resep obat</td></tr>`;
+                    tindakanSection.classList.add('hidden');
                 }
+
+                // Total
+                const grandTotal = (rm.biaya_pemeriksaan || 0) + totalTindakan;
+                document.getElementById('d-total').textContent = 'Rp ' + grandTotal.toLocaleString('id-ID');
 
                 modalLoading.classList.add('hidden');
                 modalContent.classList.remove('hidden');

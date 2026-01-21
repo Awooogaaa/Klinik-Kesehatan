@@ -61,7 +61,7 @@
                 <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Diagnosa</p>
                 <p class="text-gray-800 font-medium">{{ $kunjungan->rekamMedis->diagnosa }}</p>
                 @if($kunjungan->rekamMedis->tindakan)
-                    <p class="text-gray-500 text-sm mt-1">Tindakan: {{ $kunjungan->rekamMedis->tindakan }}</p>
+                    <p class="text-gray-500 text-sm mt-1">Catatan: {{ $kunjungan->rekamMedis->tindakan }}</p>
                 @endif
             </div>
 
@@ -69,44 +69,90 @@
             <div class="p-6 border-b border-gray-100">
                 <p class="text-xs text-gray-400 uppercase tracking-wide mb-3">Rincian Biaya</p>
                 <div class="space-y-3">
-                    <!-- Jasa Dokter -->
+                    <!-- Biaya Pemeriksaan -->
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-700">Jasa Dokter</span>
-                        <span class="text-gray-900 font-medium">Rp {{ number_format($kunjungan->dokter->biaya_jasa ?? 50000, 0, ',', '.') }}</span>
+                        <span class="text-gray-700">Biaya Pemeriksaan</span>
+                        <span class="text-gray-900 font-medium">Rp {{ number_format($kunjungan->rekamMedis->biaya_pemeriksaan ?? 0, 0, ',', '.') }}</span>
                     </div>
                     
-                    <!-- Obat -->
-                    @foreach($kunjungan->rekamMedis->obats as $obat)
-                        <div class="flex justify-between text-sm">
-                            <div>
-                                <span class="text-gray-700">{{ $obat->nama_obat }}</span>
-                                <span class="text-gray-400 text-xs ml-1">({{ $obat->pivot->jumlah }} {{ $obat->satuan }})</span>
+                    <!-- Tindakan Medis Tambahan -->
+                    @if($kunjungan->rekamMedis->tindakanMedis && $kunjungan->rekamMedis->tindakanMedis->count() > 0)
+                        @foreach($kunjungan->rekamMedis->tindakanMedis as $tindakan)
+                            <div class="flex justify-between text-sm">
+                                <div>
+                                    <span class="text-gray-700">{{ $tindakan->nama_tindakan }}</span>
+                                    @if($tindakan->keterangan)
+                                        <span class="text-gray-400 text-xs ml-1">({{ $tindakan->keterangan }})</span>
+                                    @endif
+                                </div>
+                                <span class="text-gray-900 font-medium">Rp {{ number_format($tindakan->biaya, 0, ',', '.') }}</span>
                             </div>
-                            <span class="text-gray-900 font-medium">Rp {{ number_format($obat->harga * $obat->pivot->jumlah, 0, ',', '.') }}</span>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    @endif
                 </div>
             </div>
+
+            <!-- Resep Obat (jika ada) -->
+            @if($kunjungan->rekamMedis->catatan_obat)
+            <div class="p-6 border-b border-gray-100 bg-emerald-50">
+                <p class="text-xs text-emerald-600 uppercase tracking-wide mb-2 font-semibold">Resep Obat (Beli di Luar Klinik)</p>
+                <pre class="text-gray-800 text-sm whitespace-pre-wrap font-mono bg-white p-3 rounded-lg border border-emerald-200">{{ $kunjungan->rekamMedis->catatan_obat }}</pre>
+            </div>
+            @endif
 
             <!-- Total -->
             <div class="p-6 bg-gray-900 text-white">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold">Total</span>
-                    <span class="text-xl font-bold">Rp {{ number_format($kunjungan->pembayaran->total_harga ?? 0, 0, ',', '.') }}</span>
+                    <span class="text-xl font-bold">Rp {{ number_format($kunjungan->pembayaran->total_harga ?? $kunjungan->rekamMedis->total_biaya ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
 
             <!-- Payment Status -->
+            @php 
+                $pembayaran = $kunjungan->pembayaran;
+                $isLunas = $pembayaran && $pembayaran->status_pembayaran == 'lunas';
+            @endphp
+            
+            @if($isLunas)
             <div class="p-6 flex justify-between items-center text-sm">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 bg-green-500 rounded-full"></span>
                     <span class="text-green-700 font-semibold">LUNAS</span>
                 </div>
                 <div class="text-right text-gray-500 text-xs">
-                    <p>{{ ucfirst($kunjungan->pembayaran->metode_pembayaran ?? 'Online') }}</p>
-                    <p class="font-mono">{{ $kunjungan->pembayaran->order_id ?? '-' }}</p>
+                    <p>{{ ucfirst($pembayaran->metode_pembayaran ?? 'Online') }}</p>
+                    <p class="font-mono">{{ $pembayaran->order_id ?? '-' }}</p>
                 </div>
             </div>
+            @elseif($pembayaran)
+            <div class="p-6">
+                <div class="flex justify-between items-center text-sm mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                        <span class="text-yellow-700 font-semibold">BELUM LUNAS</span>
+                    </div>
+                    <div class="text-right text-gray-500 text-xs">
+                        <p class="font-mono">{{ $pembayaran->order_id ?? '-' }}</p>
+                    </div>
+                </div>
+                <div class="no-print">
+                    <a href="{{ route('pembayarans.show', $pembayaran->id) }}" class="block w-full text-center px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-lg shadow-lg transition-all">
+                        💳 Bayar Sekarang
+                    </a>
+                </div>
+            </div>
+            @else
+            <div class="p-6 flex justify-between items-center text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                    <span class="text-gray-500 font-semibold">BELUM DITAGIH</span>
+                </div>
+                <div class="text-right text-gray-500 text-xs">
+                    <p>Menunggu tagihan dari admin</p>
+                </div>
+            </div>
+            @endif
 
             <!-- Footer -->
             <div class="border-t border-dashed border-gray-200 p-6 text-center">

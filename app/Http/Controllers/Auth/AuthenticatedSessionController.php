@@ -46,6 +46,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('dokter-dashboard', absolute: false));
         }
 
+        // 4. Jika Perawat -> Dashboard Perawat
+        if ($role === 'perawat') {
+            return redirect()->intended(route('perawat-dashboard', absolute: false));
+        }
+
         // Default redirect jika tidak ada role yang cocok (opsional)
         return redirect('/');
     }

@@ -72,4 +72,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(Pasien::class);
     }
+
+    /**
+     * Relasi ke Perawat.
+     */
+    public function perawat()
+    {
+        return $this->hasOne(Perawat::class, 'user_id');
+    }
+
+    /**
+     * Cek apakah user adalah perawat.
+     */
+    public function isPerawat(): bool
+    {
+        return $this->role === 'perawat';
+    }
+
+    /**
+     * Cek apakah user adalah dokter.
+     */
+    public function isDokter(): bool
+    {
+        return $this->role === 'dokter';
+    }
 }

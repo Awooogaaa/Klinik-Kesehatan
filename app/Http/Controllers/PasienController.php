@@ -77,6 +77,7 @@ class PasienController extends Controller
         // 1. Validasi Data Pasien
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
+            'nik' => ['nullable', 'string', 'size:16'],
             'no_telepon' => ['nullable', 'string', 'max:20'],
             'alamat' => ['nullable', 'string'],
             'tanggal_lahir' => ['nullable', 'date'],
@@ -125,6 +126,7 @@ class PasienController extends Controller
             $pasien = Pasien::create([
                 'user_id' => $userId,
                 'nama' => $request->nama,
+                'nik' => $request->nik,
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
                 'tanggal_lahir' => $request->tanggal_lahir,
@@ -168,20 +170,24 @@ class PasienController extends Controller
     {
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
+            'nik' => ['nullable', 'string', 'size:16'],
             'no_telepon' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string'],
             'tanggal_lahir' => ['required', 'date'],
             'jenis_kelamin' => ['required', \Illuminate\Validation\Rule::in(['Laki-laki', 'Perempuan'])],
+            'hubungan' => ['required', 'string', 'max:50'],
         ]);
 
         DB::transaction(function () use ($request) {
             $pasien = Pasien::create([
                 'user_id' => Auth::id(), // Link otomatis ke akun yang sedang login
                 'nama' => $request->nama,
+                'nik' => $request->nik,
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'jenis_kelamin' => $request->jenis_kelamin,
+                'hubungan' => $request->hubungan,
             ]);
 
             // Generate No. RM (Sederhana: pakai ID)
@@ -189,7 +195,7 @@ class PasienController extends Controller
             $pasien->save();
         });
 
-        return redirect()->route('pasiens.landingpage')->with('success', 'Anggota keluarga berhasil ditambahkan.');
+        return redirect()->route('pasiens.landingpage')->with('success', 'Data berhasil ditambahkan.');
     }
 
    public function landingpage() 
@@ -199,7 +205,7 @@ class PasienController extends Controller
     $keluargaIds = $keluarga->pluck('id');
 
     // Eager Load diperbaiki: 'dokter.user' agar bisa ambil nama dari tabel users jika perlu
-    $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.obats']) 
+    $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.tindakanMedis']) 
                 ->whereIn('pasien_id', $keluargaIds)
                 ->latest()
                 ->get();
@@ -209,11 +215,12 @@ class PasienController extends Controller
 
     public function nota($id)
     {
-        // Ambil data kunjungan berdasarkan ID
-        $kunjungan = Kunjungan::with(['pasien', 'dokter.user', 'rekamMedis.obats'])->findOrFail($id);
+        // Ambil data kunjungan berdasarkan ID (termasuk pembayaran untuk cek status)
+        $kunjungan = Kunjungan::with(['pasien', 'dokter.user', 'rekamMedis.tindakanMedis', 'pembayaran'])->findOrFail($id);
 
-        // Security: Pastikan yang melihat nota adalah pemilik pasien
-        if ($kunjungan->pasien->user_id !== Auth::id()) {
+        // Security: Pastikan yang melihat nota adalah pemilik pasien ATAU admin
+        $user = Auth::user();
+        if ($kunjungan->pasien->user_id !== $user->id && $user->role !== 'admin') {
             abort(403, 'Anda tidak berhak melihat nota ini.');
         }
 
@@ -258,6 +265,7 @@ class PasienController extends Controller
     {
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
+            'nik' => ['nullable', 'string', 'size:16'],
             'no_telepon' => ['nullable', 'string', 'max:20'],
             'alamat' => ['nullable', 'string'],
             'tanggal_lahir' => ['nullable', 'date'],
@@ -270,6 +278,7 @@ class PasienController extends Controller
             // Update Data Pasien
             $pasien->update([
                 'nama' => $request->nama,
+                'nik' => $request->nik,
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
                 'tanggal_lahir' => $request->tanggal_lahir,

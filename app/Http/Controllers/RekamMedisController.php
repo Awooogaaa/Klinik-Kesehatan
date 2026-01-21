@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\RekamMedis;
 use App\Models\Kunjungan;
-use App\Models\Obat;
 use App\Models\Pembayaran;
 use App\Models\Dokter;
 use Illuminate\Http\Request;
@@ -17,14 +16,26 @@ class RekamMedisController extends Controller
 {
     public function index(Request $request)
     {
-        $query = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan', 'obats']);
+        $query = RekamMedis::with(['pasien', 'dokter.user', 'kunjungan', 'tindakanMedis', 'inputBy']);
 
-        // Filter by logged-in dokter if user has dokter role
         $user = auth()->user();
+        
+        // Filter by logged-in dokter if user has dokter role
         if ($user && $user->role === 'dokter') {
             $dokter = Dokter::where('user_id', $user->id)->first();
             if ($dokter) {
                 $query->where('dokter_id', $dokter->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+        
+        // Filter untuk perawat: hanya rekam medis dari dokter yang dibantu
+        if ($user && $user->role === 'perawat') {
+            $perawat = $user->perawat;
+            if ($perawat) {
+                $dokterIds = $perawat->dokters->pluck('id');
+                $query->whereIn('dokter_id', $dokterIds);
             } else {
                 $query->whereRaw('1 = 0');
             }
@@ -38,13 +49,6 @@ class RekamMedisController extends Controller
                     $q->where('nama', 'like', "%{$search}%");
                 })
                 ->orWhere('diagnosa', 'like', "%{$search}%");
-            });
-        }
-
-        // Search by obat name
-        if ($request->filled('obat')) {
-            $query->whereHas('obats', function($q) use ($request) {
-                $q->where('nama_obat', 'like', "%{$request->obat}%");
             });
         }
 
@@ -67,8 +71,9 @@ class RekamMedisController extends Controller
             ->whereDoesntHave('rekamMedis') 
             ->orderBy('waktu_kunjungan', 'asc');
 
-        // Filter by logged-in dokter if user has dokter role
         $user = auth()->user();
+        
+        // Filter by logged-in dokter if user has dokter role
         if ($user && $user->role === 'dokter') {
             $dokter = Dokter::where('user_id', $user->id)->first();
             if ($dokter) {
@@ -77,26 +82,36 @@ class RekamMedisController extends Controller
                 $kunjungansQuery->whereRaw('1 = 0');
             }
         }
+        
+        // Filter untuk perawat: hanya kunjungan dari dokter yang dibantu
+        if ($user && $user->role === 'perawat') {
+            $perawat = $user->perawat;
+            if ($perawat) {
+                $dokterIds = $perawat->dokters->pluck('id');
+                $kunjungansQuery->whereIn('dokter_id', $dokterIds);
+            } else {
+                $kunjungansQuery->whereRaw('1 = 0');
+            }
+        }
 
         $kunjungans = $kunjungansQuery->get();
 
-        $obats = Obat::orderBy('nama_obat')->get();
-
-        return view('rekam_medis.create', compact('kunjungans', 'obats'));
+        return view('rekam_medis.create', compact('kunjungans'));
     }
 
     public function store(Request $request)
     {
-        
         $request->validate([
-            'kunjungan_id' => 'required|exists:kunjungans,id',
-            'keluhan'      => 'required|string',
-            'diagnosa'     => 'required|string',
-            'tindakan'     => 'nullable|string',
-            'obats'        => 'nullable|array',
-            'obats.*.obat_id' => 'required|exists:obats,id',
-            'obats.*.jumlah'  => 'required|integer|min:1',
-            'obats.*.dosis'   => 'required|string|max:255',
+            'kunjungan_id'      => 'required|exists:kunjungans,id',
+            'keluhan'           => 'required|string',
+            'diagnosa'          => 'required|string',
+            'tindakan'          => 'nullable|string',
+            'biaya_pemeriksaan' => 'required|integer|min:0',
+            'catatan_obat'      => 'nullable|string',
+            'tindakan_medis'    => 'nullable|array',
+            'tindakan_medis.*.nama_tindakan' => 'nullable|string|max:255',
+            'tindakan_medis.*.biaya'         => 'nullable|integer|min:0',
+            'tindakan_medis.*.keterangan'    => 'nullable|string',
         ]);
 
         try {
@@ -105,58 +120,44 @@ class RekamMedisController extends Controller
                 $kunjungan = Kunjungan::with(['pasien', 'dokter'])->findOrFail($request->kunjungan_id);
 
                 // 2. Simpan Data Rekam Medis
+                $user = auth()->user();
                 $rekamMedis = RekamMedis::create([
-                    'kunjungan_id' => $kunjungan->id,
-                    'pasien_id'    => $kunjungan->pasien_id, 
-                    'dokter_id'    => $kunjungan->dokter_id, 
-                    'keluhan'      => $request->keluhan,
-                    'diagnosa'     => $request->diagnosa,
-                    'tindakan'     => $request->tindakan,
+                    'kunjungan_id'      => $kunjungan->id,
+                    'pasien_id'         => $kunjungan->pasien_id, 
+                    'dokter_id'         => $kunjungan->dokter_id, 
+                    'keluhan'           => $request->keluhan,
+                    'diagnosa'          => $request->diagnosa,
+                    'tindakan'          => $request->tindakan,
+                    'biaya_pemeriksaan' => $request->biaya_pemeriksaan,
+                    'catatan_obat'      => $request->catatan_obat,
+                    'input_by_user_id'  => $user->id,
+                    'input_by_role'     => $user->role === 'perawat' ? 'perawat' : 'dokter',
                 ]);
 
-                // 3. Proses Obat & Hitung Total Harga
-                $totalHargaObat = 0;
-                
-                if ($request->has('obats') && is_array($request->obats)) {
-                    foreach ($request->obats as $resep) {
-                        $jumlah = (int) $resep['jumlah'];
-                        $dosis  = $resep['dosis'];
-                        $obatId = $resep['obat_id'];
-                        
-                        // Lock obat
-                        $obat = Obat::lockForUpdate()->find($obatId);
-                        
-                        // Validasi Stok
-                        if (!$obat || $obat->stok < $jumlah) {
-                            throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Sisa: {$obat->stok}");
+                // 3. Proses Tindakan Medis Tambahan
+                $totalTindakan = 0;
+                if ($request->has('tindakan_medis') && is_array($request->tindakan_medis)) {
+                    foreach ($request->tindakan_medis as $tindakan) {
+                        if (!empty($tindakan['nama_tindakan'])) {
+                            $rekamMedis->tindakanMedis()->create([
+                                'nama_tindakan' => $tindakan['nama_tindakan'],
+                                'keterangan'    => $tindakan['keterangan'] ?? null,
+                                'biaya'         => $tindakan['biaya'] ?? 0,
+                            ]);
+                            $totalTindakan += $tindakan['biaya'] ?? 0;
                         }
-
-                        // Hitung Subtotal
-                        $subtotal = $obat->harga * $jumlah;
-                        $totalHargaObat += $subtotal;
-
-                        // Simpan ke Pivot
-                        $rekamMedis->obats()->attach($obatId, [
-                            'jumlah' => $jumlah,
-                            'dosis'  => $dosis
-                        ]);
-
-                        // Kurangi Stok
-                        $obat->decrement('stok', $jumlah);
                     }
                 }
 
                 // 4. Generate Pembayaran (Midtrans)
-                
                 $serverKey = config('services.midtrans.server_key');
 
-if (!$serverKey) {
-    throw new \Exception("Midtrans Server Key belum dikonfigurasi");
-}
+                if (!$serverKey) {
+                    throw new \Exception("Midtrans Server Key belum dikonfigurasi");
+                }
 
-
-                $biayaJasa = $kunjungan->dokter->biaya_jasa ?? 50000;
-                $grandTotal = $biayaJasa + $totalHargaObat;
+                // Total = Biaya Pemeriksaan + Total Tindakan Medis
+                $grandTotal = $request->biaya_pemeriksaan + $totalTindakan;
 
                 // Konfigurasi Midtrans
                 Config::$serverKey = $serverKey;
@@ -164,12 +165,10 @@ if (!$serverKey) {
                 Config::$isSanitized = true;
                 Config::$is3ds = true;
 
-                // --- PERBAIKAN: FIX UNDEFINED ARRAY KEY 10023 & SSL ---
                 Config::$curlOptions = [
-                    CURLOPT_SSL_VERIFYPEER => false, // Bypass SSL Error
-                    CURLOPT_HTTPHEADER => [],        // Fix Undefined Key 10023
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_HTTPHEADER => [],
                 ];
-                // ------------------------------------------------------
 
                 $orderId = 'INV-' . time() . '-' . $kunjungan->id;
 
@@ -216,10 +215,9 @@ if (!$serverKey) {
     public function edit(RekamMedis $rekam_medi)
     {
         $rekamMedis = $rekam_medi; 
-        $rekamMedis->load(['obats', 'pasien', 'dokter.user', 'kunjungan']);
-        $obats = Obat::orderBy('nama_obat')->get();
+        $rekamMedis->load(['tindakanMedis', 'pasien', 'dokter.user', 'kunjungan']);
 
-        return view('rekam_medis.edit', compact('rekamMedis', 'obats'));
+        return view('rekam_medis.edit', compact('rekamMedis'));
     }
 
     public function update(Request $request, $id)
@@ -227,50 +225,52 @@ if (!$serverKey) {
         $rekamMedis = RekamMedis::findOrFail($id);
 
         $request->validate([
-            'keluhan'      => 'required|string',
-            'diagnosa'     => 'required|string',
-            'tindakan'     => 'nullable|string',
-            'obats'        => 'nullable|array',
-            'obats.*.obat_id' => 'required|exists:obats,id',
-            'obats.*.jumlah'  => 'required|integer|min:1',
-            'obats.*.dosis'   => 'required|string|max:255',
+            'keluhan'           => 'required|string',
+            'diagnosa'          => 'required|string',
+            'tindakan'          => 'nullable|string',
+            'biaya_pemeriksaan' => 'required|integer|min:0',
+            'catatan_obat'      => 'nullable|string',
+            'tindakan_medis'    => 'nullable|array',
+            'tindakan_medis.*.nama_tindakan' => 'nullable|string|max:255',
+            'tindakan_medis.*.biaya'         => 'nullable|integer|min:0',
+            'tindakan_medis.*.keterangan'    => 'nullable|string',
         ]);
 
         try {
             DB::transaction(function () use ($request, $rekamMedis) {
                 // Update Data Dasar
-                $rekamMedis->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
+                $rekamMedis->update([
+                    'keluhan'           => $request->keluhan,
+                    'diagnosa'          => $request->diagnosa,
+                    'tindakan'          => $request->tindakan,
+                    'biaya_pemeriksaan' => $request->biaya_pemeriksaan,
+                    'catatan_obat'      => $request->catatan_obat,
+                ]);
 
-                // A. Kembalikan Stok Lama
-                $oldObats = $rekamMedis->obats()->get();
-                foreach ($oldObats as $obatLama) {
-                    $obatLama->increment('stok', $obatLama->pivot->jumlah);
-                }
+                // Hapus tindakan medis lama
+                $rekamMedis->tindakanMedis()->delete();
 
-                // B. Proses Obat Baru
-                $syncData = [];
-                if ($request->filled('obats') && is_array($request->obats)) {
-                    foreach ($request->obats as $resep) {
-                        if (empty($resep['obat_id']) || empty($resep['jumlah'])) continue;
-
-                        $obat = Obat::lockForUpdate()->find($resep['obat_id']);
-                        $jumlahBaru = (int) $resep['jumlah'];
-
-                        if (!$obat || $obat->stok < $jumlahBaru) {
-                            throw new \Exception("Stok obat {$obat->nama_obat} tidak mencukupi. Tersedia: {$obat->stok}");
+                // Tambah tindakan medis baru
+                $totalTindakan = 0;
+                if ($request->has('tindakan_medis') && is_array($request->tindakan_medis)) {
+                    foreach ($request->tindakan_medis as $tindakan) {
+                        if (!empty($tindakan['nama_tindakan'])) {
+                            $rekamMedis->tindakanMedis()->create([
+                                'nama_tindakan' => $tindakan['nama_tindakan'],
+                                'keterangan'    => $tindakan['keterangan'] ?? null,
+                                'biaya'         => $tindakan['biaya'] ?? 0,
+                            ]);
+                            $totalTindakan += $tindakan['biaya'] ?? 0;
                         }
-
-                        $obat->decrement('stok', $jumlahBaru);
-
-                        $syncData[$resep['obat_id']] = [
-                            'jumlah' => $jumlahBaru,
-                            'dosis'  => $resep['dosis'] ?? '-',
-                        ];
                     }
                 }
 
-                // C. Sync
-                $rekamMedis->obats()->sync($syncData);
+                // Update Pembayaran jika ada
+                $kunjungan = $rekamMedis->kunjungan;
+                if ($kunjungan && $kunjungan->pembayaran) {
+                    $grandTotal = $request->biaya_pemeriksaan + $totalTindakan;
+                    $kunjungan->pembayaran->update(['total_harga' => $grandTotal]);
+                }
             });
 
             return redirect()->route('rekam_medis.index')->with('success', 'Rekam medis berhasil diperbarui.');
@@ -282,7 +282,7 @@ if (!$serverKey) {
 
     public function show(RekamMedis $rekam_medi) 
     {
-        $rekam_medi->load(['pasien', 'dokter.user', 'kunjungan', 'obats']);
+        $rekam_medi->load(['pasien', 'dokter.user', 'kunjungan', 'tindakanMedis']);
         return response()->json(['rekam_medis' => $rekam_medi]);
     }
 
@@ -294,11 +294,8 @@ if (!$serverKey) {
             DB::transaction(function () use ($rekamMedis) {
                 $kunjungan = $rekamMedis->kunjungan;
 
-                // 1. Kembalikan Stok
-                foreach($rekamMedis->obats as $obat) {
-                    $obat->increment('stok', $obat->pivot->jumlah);
-                }
-                $rekamMedis->obats()->detach();
+                // 1. Hapus tindakan medis
+                $rekamMedis->tindakanMedis()->delete();
 
                 // 2. Hapus Pembayaran
                 if($kunjungan && $kunjungan->pembayaran) {

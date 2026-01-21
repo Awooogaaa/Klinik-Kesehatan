@@ -24,6 +24,19 @@ return new class extends Migration
             $table->text('diagnosa');
             $table->text('tindakan')->nullable();
             
+            // Siapa yang menginput rekam medis
+            $table->foreignId('input_by_user_id')
+                  ->nullable()
+                  ->constrained('users')
+                  ->onDelete('set null');
+            $table->enum('input_by_role', ['dokter', 'perawat'])->default('dokter');
+            
+            // Biaya pemeriksaan manual
+            $table->integer('biaya_pemeriksaan')->default(0);
+            
+            // Catatan obat/resep (diketik manual, pasien beli sendiri di luar)
+            $table->text('catatan_obat')->nullable();
+            
             $table->timestamps();
         });
     }

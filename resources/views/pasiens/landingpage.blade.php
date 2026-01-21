@@ -235,6 +235,13 @@
                         <form method="post" action="{{ route('pasiens.storeKeluarga') }}" class="space-y-4">
                             @csrf
                             <input type="text" name="nama" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="Nama Lengkap" required />
+                            
+                            {{-- NIK Input --}}
+                            <div>
+                                <input type="text" name="nik" pattern="[0-9]{16}" maxlength="16" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="NIK (16 digit)" />
+                                <p class="text-xs text-gray-400 mt-1 ml-1">🪪 Nomor Induk Kependudukan (opsional)</p>
+                            </div>
+                            
                             <div class="grid grid-cols-2 gap-3">
                                 <select name="jenis_kelamin" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition">
                                     <option value="Laki-laki">Laki-laki</option>
@@ -245,6 +252,23 @@
                                     <p class="text-xs text-gray-400 mt-1 ml-1">📅 Tanggal Lahir</p>
                                 </div>
                             </div>
+                            
+                            {{-- Hubungan dengan Pemilik Akun --}}
+                            <div>
+                                <select name="hubungan" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required>
+                                    <option value="" disabled selected>-- Hubungan dengan Anda --</option>
+                                    <option value="Diri Sendiri">👤 Diri Sendiri</option>
+                                    <option value="Anak">👶 Anak</option>
+                                    <option value="Suami/Istri">💑 Suami/Istri</option>
+                                    <option value="Orang Tua">👴 Orang Tua</option>
+                                    <option value="Saudara">👨‍👩‍👧‍👦 Saudara</option>
+                                    <option value="Tetangga">🏘️ Tetangga</option>
+                                    <option value="Teman">🤝 Teman</option>
+                                    <option value="Lainnya">📝 Lainnya</option>
+                                </select>
+                                <p class="text-xs text-gray-400 mt-1 ml-1">👥 Siapa orang ini bagi Anda?</p>
+                            </div>
+                            
                             <div>
                                 <input type="tel" name="no_telepon" pattern="[0-9]*" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="No. HP / WhatsApp (angka saja)" required />
                                 <p class="text-xs text-gray-400 mt-1 ml-1">📱 Hanya boleh angka, contoh: 08123456789</p>
@@ -255,40 +279,60 @@
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
-                                    Simpan Data Keluarga
+                                    Simpan Data
                                 </span>
                             </button>
                         </form>
                     </div>
 
-                    {{-- Daftar Anggota Keluarga --}}
+                    {{-- Daftar Anggota Terdaftar --}}
                     <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
                         <h3 class="font-bold text-gray-900 mb-4 flex items-center text-sm">
                             <span class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                            Anggota Keluarga Terdaftar ({{ $keluarga->count() }})
+                            Orang yang Terdaftar di Akun Anda ({{ $keluarga->count() }})
                         </h3>
-                        <div class="space-y-3 max-h-64 overflow-y-auto">
+                        <div class="space-y-3 max-h-72 overflow-y-auto">
                             @forelse($keluarga as $item)
-                                <div class="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl hover:from-blue-50 hover:to-white transition-all duration-200 border border-gray-100 hover:border-blue-200 group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow {{ $item->jenis_kelamin == 'Laki-laki' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' : 'bg-gradient-to-br from-pink-400 to-rose-500' }}">
-                                            {{ strtoupper(substr($item->nama, 0, 1)) }}
+                                <div class="p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl hover:from-blue-50 hover:to-white transition-all duration-200 border border-gray-100 hover:border-blue-200 group">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow {{ $item->jenis_kelamin == 'Laki-laki' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' : 'bg-gradient-to-br from-pink-400 to-rose-500' }}">
+                                                {{ strtoupper(substr($item->nama, 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition">{{ $item->nama }}</p>
+                                                <p class="text-xs text-gray-500">{{ $item->jenis_kelamin }} • {{ \Carbon\Carbon::parse($item->tanggal_lahir)->age }} thn</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition">{{ $item->nama }}</p>
-                                            <p class="text-xs text-gray-500">{{ $item->jenis_kelamin }} • {{ \Carbon\Carbon::parse($item->tanggal_lahir)->age }} thn</p>
+                                        <div class="flex flex-col items-end gap-1">
+                                            @if($item->hubungan)
+                                                @php
+                                                    $badgeColors = [
+                                                        'Diri Sendiri' => 'bg-green-100 text-green-700 border-green-200',
+                                                        'Anak' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                        'Suami/Istri' => 'bg-pink-100 text-pink-700 border-pink-200',
+                                                        'Orang Tua' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                                        'Saudara' => 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                                                        'Tetangga' => 'bg-orange-100 text-orange-700 border-orange-200',
+                                                        'Teman' => 'bg-teal-100 text-teal-700 border-teal-200',
+                                                        'Lainnya' => 'bg-gray-100 text-gray-700 border-gray-200',
+                                                    ];
+                                                    $badgeClass = $badgeColors[$item->hubungan] ?? 'bg-gray-100 text-gray-600 border-gray-200';
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold border {{ $badgeClass }}">
+                                                    {{ $item->hubungan }}
+                                                </span>
+                                            @endif
+                                            <span class="text-xs text-gray-400 font-mono">RM: {{ $item->no_rekam_medis }}</span>
                                         </div>
                                     </div>
-                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-gray-100 text-gray-600">
-                                        {{ $item->no_rekam_medis }}
-                                    </span>
                                 </div>
                             @empty
                                 <div class="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                                     <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                     </svg>
-                                    <p class="text-gray-400 text-sm">Belum ada data keluarga.</p>
+                                    <p class="text-gray-400 text-sm">Belum ada data.</p>
                                 </div>
                             @endforelse
                         </div>
@@ -403,12 +447,14 @@
                                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200">
                                                             ✓ LUNAS
                                                         </span>
+                                                        @if($kunjungan->rekamMedis)
                                                         <a href="{{ route('pasiens.nota', $kunjungan->id) }}" target="_blank" class="text-green-600 hover:text-green-800 text-xs font-bold underline flex items-center gap-1">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                             </svg>
                                                             Lihat Nota
                                                         </a>
+                                                        @endif
                                                     </div>
                                                 @else
                                                     <div class="flex flex-col items-center gap-2">
@@ -418,10 +464,30 @@
                                                         <a href="{{ route('pembayarans.show', $pembayaran->id) }}" class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-full shadow hover:shadow-lg transition-all">
                                                             Bayar Sekarang
                                                         </a>
+                                                        @if($kunjungan->rekamMedis)
+                                                        <a href="{{ route('pasiens.nota', $kunjungan->id) }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium underline flex items-center gap-1 mt-1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                            Lihat Nota
+                                                        </a>
+                                                        @endif
                                                     </div>
                                                 @endif
                                             @else
+                                                @if($kunjungan->rekamMedis)
+                                                <div class="flex flex-col items-center gap-2">
+                                                    <span class="text-xs text-gray-400 italic">Belum ditagih</span>
+                                                    <a href="{{ route('pasiens.nota', $kunjungan->id) }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium underline flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        Lihat Nota
+                                                    </a>
+                                                </div>
+                                                @else
                                                 <span class="text-xs text-gray-400 italic">Belum ditagih</span>
+                                                @endif
                                             @endif
                                         @else
                                             <span class="text-gray-300">-</span>
@@ -538,18 +604,9 @@
                                                                     <h4 class="font-bold text-gray-800 text-sm mb-3 flex items-center gap-2">
                                                                         <span class="bg-purple-100 p-1.5 rounded-lg text-purple-600">💊</span> Resep Obat
                                                                     </h4>
-                                                                    @if ($kunjungan->rekamMedis->obats->isNotEmpty())
-                                                                        <div class="space-y-2">
-                                                                            @foreach ($kunjungan->rekamMedis->obats as $obat)
-                                                                                <div class="flex justify-between items-center bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm">
-                                                                                    <div>
-                                                                                        <span class="font-bold text-gray-800 block">{{ $obat->nama_obat }}</span>
-                                                                                        <span class="text-xs text-gray-500">{{ $obat->pivot->jumlah }} {{ $obat->satuan }}</span>
-                                                                                    </div>
-                                                                                    <span class="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">{{ $obat->pivot->dosis }}</span>
-                                                                                </div>
-                                                                            @endforeach
-                                                                        </div>
+                                                                    @if ($kunjungan->rekamMedis->catatan_obat)
+                                                                        <pre class="text-gray-800 text-sm whitespace-pre-wrap font-mono bg-white p-3 rounded-lg border border-purple-100">{{ $kunjungan->rekamMedis->catatan_obat }}</pre>
+                                                                        <p class="text-xs text-gray-400 mt-2 italic">📋 Resep ini untuk pembelian obat di luar klinik</p>
                                                                     @else
                                                                         <div class="text-center py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                                                                             <p class="text-gray-400 italic text-sm">Tidak ada resep obat</p>
