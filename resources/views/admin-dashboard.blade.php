@@ -95,12 +95,12 @@
                 <div class="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-500/30 transform hover:scale-105 transition-all duration-300">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-emerald-100 text-sm font-medium">Total Obat</p>
-                            <p class="text-3xl font-bold mt-1">{{ \App\Models\Obat::count() }}</p>
+                            <p class="text-emerald-100 text-sm font-medium">Total Rekam Medis</p>
+                            <p class="text-3xl font-bold mt-1">{{ \App\Models\RekamMedis::count() }}</p>
                         </div>
                         <div class="bg-white/20 p-3 rounded-xl">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </div>
                     </div>
@@ -201,21 +201,10 @@
                             </div>
                             <div>
                                 <h4 class="text-lg font-bold text-gray-900">Layanan Klinik</h4>
-                                <p class="text-sm text-gray-500">Kelola obat & kunjungan</p>
+                                <p class="text-sm text-gray-500">Kelola kunjungan pasien</p>
                             </div>
                         </div>
                         <div class="space-y-2">
-                            <a href="{{ route('obats.index') }}" class="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200 group">
-                                <div class="flex items-center">
-                                    <svg class="w-5 h-5 text-emerald-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                                    </svg>
-                                    <span class="font-semibold text-gray-700">Kelola Obat</span>
-                                </div>
-                                <svg class="w-5 h-5 text-emerald-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </a>
                             <a href="{{ route('kunjungans.index') }}" class="flex items-center justify-between p-3 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-100 hover:border-violet-300 hover:shadow-md transition-all duration-200 group">
                                 <div class="flex items-center">
                                     <svg class="w-5 h-5 text-violet-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,47 +220,7 @@
                     </div>
                 </div>
 
-                <!-- Stok Menipis Alert -->
-                @if($obatMenipis->count() > 0)
-                <div class="bg-gradient-to-br from-red-50 to-rose-50 overflow-hidden shadow-xl rounded-2xl border-2 border-red-200">
-                    <div class="p-6">
-                        <div class="flex items-center space-x-4 mb-4">
-                            <div class="p-3 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl shadow-lg shadow-red-500/30 animate-pulse">
-                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold text-red-800">Stok Menipis!</h4>
-                                <p class="text-sm text-red-600">{{ $obatMenipis->count() }} obat perlu restock</p>
-                            </div>
-                        </div>
-                        <div class="space-y-2 max-h-40 overflow-y-auto">
-                            @foreach($obatMenipis as $obat)
-                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-red-100 shadow-sm">
-                                    <div class="flex items-center">
-                                        <div class="p-2 bg-red-100 rounded-lg mr-3">
-                                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                                            </svg>
-                                        </div>
-                                        <span class="font-semibold text-gray-800 truncate">{{ $obat->nama_obat }}</span>
-                                    </div>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold {{ $obat->stok == 0 ? 'bg-red-500 text-white' : 'bg-amber-100 text-amber-700' }}">
-                                        {{ $obat->stok == 0 ? 'Habis' : 'Sisa: ' . $obat->stok }}
-                                    </span>
-                                </div>
-                            @endforeach
-                        </div>
-                        <a href="{{ route('obats.index') }}" class="mt-4 inline-flex items-center justify-center w-full px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 rounded-xl text-white font-semibold shadow-lg hover:shadow-xl hover:from-red-600 hover:to-rose-700 transition-all duration-200">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                            Kelola Stok Obat
-                        </a>
-                    </div>
-                </div>
-                @else
+                <!-- Rekam Medis Card -->
                 <!-- Rekam Medis Card (shown when no low stock) -->
                 <div class="bg-white overflow-hidden shadow-xl rounded-2xl border border-gray-100 hover:shadow-2xl hover:border-rose-200 transform hover:-translate-y-1 transition-all duration-300">
                     <div class="p-6">
@@ -312,7 +261,6 @@
                         </div>
                     </div>
                 </div>
-                @endif
             </div>
         </div>
     </div>

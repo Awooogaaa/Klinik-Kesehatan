@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PasienController;
 use App\Http\Controllers\DokterController;
 use App\Http\Controllers\PerawatController;
@@ -10,7 +9,6 @@ use App\Http\Controllers\KunjunganController;
 use App\Http\Controllers\PembayaranController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Obat;
 use Carbon\Carbon;
 
 
@@ -55,9 +53,7 @@ Route::middleware(['auth', 'role:admin,dokter,perawat'])->group(function () {
     Route::resource('rekam_medis', RekamMedisController::class);
 });
 
-// --- GROUP SHARED: ADMIN & DOKTER ---
 Route::middleware(['auth', 'role:admin,dokter'])->group(function () {
-    Route::resource('obats', ObatController::class);
     Route::resource('kunjungans', KunjunganController::class);
 });
 
@@ -66,9 +62,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     
     // Dashboard Khusus Admin
     Route::get('/admin-dashboard', function () {
-        
-        // 1. DATA OBAT MENIPIS (Untuk Notifikasi)
-        $obatMenipis = \App\Models\Obat::where('stok', '<', 10)->get();
 
         // 2. DATA CHART KUNJUNGAN
         // Syarat: Ada Waktu Kunjungan, Tahun Ini, DAN SUDAH ADA REKAM MEDIS
@@ -103,7 +96,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
         if ($maxKunjungan == 0) $maxKunjungan = 1;
 
-        return view('admin-dashboard', compact('obatMenipis', 'chartData', 'maxKunjungan'));
+        return view('admin-dashboard', compact('chartData', 'maxKunjungan'));
 
     })->name('admin-dashboard');
 
