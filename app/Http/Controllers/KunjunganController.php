@@ -70,6 +70,20 @@ class KunjunganController extends Controller
             'status' => 'required|in:menunggu,disetujui,selesai,batal',
         ]);
 
+        // Cek konflik jadwal dokter (jika dokter dan waktu sudah ditentukan)
+        if ($request->filled('dokter_id') && $request->filled('waktu_kunjungan')) {
+            $existingKunjungan = Kunjungan::where('dokter_id', $request->dokter_id)
+                ->where('waktu_kunjungan', $request->waktu_kunjungan)
+                ->whereNotIn('status', ['batal', 'selesai']) // Abaikan yang sudah batal/selesai
+                ->exists();
+
+            if ($existingKunjungan) {
+                return back()->withErrors([
+                    'waktu_kunjungan' => 'Dokter sudah memiliki jadwal kunjungan pada waktu tersebut. Silakan pilih waktu lain.'
+                ])->withInput();
+            }
+        }
+
         Kunjungan::create($request->all());
 
         return redirect()->route('kunjungans.index')->with('success', 'Kunjungan berhasil didaftarkan.');
@@ -91,6 +105,19 @@ class KunjunganController extends Controller
             'waktu_kunjungan' => 'required|date',
             'status' => 'required|in:menunggu,disetujui,selesai,batal',
         ]);
+
+        // Cek konflik jadwal dokter (exclude kunjungan ini sendiri)
+        $existingKunjungan = Kunjungan::where('dokter_id', $request->dokter_id)
+            ->where('waktu_kunjungan', $request->waktu_kunjungan)
+            ->where('id', '!=', $kunjungan->id) // Exclude current kunjungan
+            ->whereNotIn('status', ['batal', 'selesai']) // Abaikan yang sudah batal/selesai
+            ->exists();
+
+        if ($existingKunjungan) {
+            return back()->withErrors([
+                'waktu_kunjungan' => 'Dokter sudah memiliki jadwal kunjungan pada waktu tersebut. Silakan pilih waktu lain.'
+            ])->withInput();
+        }
 
         $kunjungan->update($request->all());
 
