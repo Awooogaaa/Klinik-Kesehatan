@@ -35,8 +35,8 @@
                             </div>
                         </div>
                         <div class="hidden md:block text-right">
-                            <p class="text-blue-100 text-sm">{{ now()->format('l, d F Y') }}</p>
-                            <p class="text-white text-lg font-semibold">{{ now()->format('H:i') }} WIB</p>
+                            <p id="dokter-date" class="text-blue-100 text-sm"></p>
+                            <p id="dokter-time" class="text-white text-2xl font-bold"></p>
                         </div>
                     </div>
                 </div>
@@ -134,4 +134,35 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function updateDateTime(dateId, timeId) {
+            const now = new Date();
+            
+            // Format tanggal: Jumat, 30 Januari 2026
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[now.getDay()];
+            const date = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            const dateStr = `${dayName}, ${date} ${monthName} ${year}`;
+            
+            // Format waktu: 10:00:58 WIB
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${hours}:${minutes}:${seconds} WIB`;
+            
+            document.getElementById(dateId).textContent = dateStr;
+            document.getElementById(timeId).textContent = timeStr;
+        }
+        
+        // Update setiap detik
+        updateDateTime('dokter-date', 'dokter-time');
+        setInterval(() => updateDateTime('dokter-date', 'dokter-time'), 1000);
+    </script>
 </x-app-layout>

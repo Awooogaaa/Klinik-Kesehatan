@@ -18,6 +18,29 @@
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            <!-- Welcome Card with Date & Time -->
+            <div class="bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 overflow-hidden shadow-xl rounded-2xl mb-6">
+                <div class="p-8">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-5">
+                            <div class="h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center shadow-xl border-4 border-white/30">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white">Halo, {{ Auth::user()->name }}</h3>
+                                <p class="text-pink-100 mt-1">Selamat bertugas! Semoga hari Anda menyenangkan.</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:block text-right">
+                            <p id="perawat-date" class="text-pink-100 text-sm"></p>
+                            <p id="perawat-time" class="text-white text-2xl font-bold"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Statistik Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl p-6 text-white shadow-xl shadow-pink-500/30 transform hover:scale-105 transition-all duration-300">
@@ -185,4 +208,35 @@
             @endif
         </div>
     </div>
+
+    <script>
+        function updateDateTime(dateId, timeId) {
+            const now = new Date();
+            
+            // Format tanggal: Jumat, 30 Januari 2026
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[now.getDay()];
+            const date = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            const dateStr = `${dayName}, ${date} ${monthName} ${year}`;
+            
+            // Format waktu: 10:00:58 WIB
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${hours}:${minutes}:${seconds} WIB`;
+            
+            document.getElementById(dateId).textContent = dateStr;
+            document.getElementById(timeId).textContent = timeStr;
+        }
+        
+        // Update setiap detik
+        updateDateTime('perawat-date', 'perawat-time');
+        setInterval(() => updateDateTime('perawat-date', 'perawat-time'), 1000);
+    </script>
 </x-app-layout>
