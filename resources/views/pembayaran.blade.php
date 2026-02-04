@@ -51,27 +51,73 @@
                     {{-- Divider --}}
                     <div class="border-t border-dashed border-slate-200"></div>
 
+                    {{-- Detail Harga (Itemized Breakdown) --}}
+                    <div class="space-y-3">
+                        <h3 class="font-bold text-slate-700 flex items-center text-sm">
+                            <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Detail Harga
+                        </h3>
+                        
+                        {{-- Biaya Pemeriksaan --}}
+                        @if($pembayaran->kunjungan->rekamMedis)
+                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <span class="text-sm text-slate-600">Biaya Pemeriksaan</span>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">Rp{{ number_format($pembayaran->kunjungan->rekamMedis->biaya_pemeriksaan ?? 0, 0, ',', '.') }}</span>
+                        </div>
+                        
+                        {{-- Tindakan Medis (if any) --}}
+                        @if($pembayaran->kunjungan->rekamMedis->tindakanMedis && $pembayaran->kunjungan->rekamMedis->tindakanMedis->count() > 0)
+                            @foreach($pembayaran->kunjungan->rekamMedis->tindakanMedis as $tindakan)
+                            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-slate-600">{{ $tindakan->nama_tindakan }}</span>
+                                        @if($tindakan->keterangan)
+                                            <span class="text-xs text-slate-400">{{ $tindakan->keterangan }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-700">Rp{{ number_format($tindakan->biaya, 0, ',', '.') }}</span>
+                            </div>
+                            @endforeach
+                        @endif
+                        
+                    
+                        @else
+                        <div class="text-center py-4 text-sm text-slate-500 italic">
+                            Detail rekam medis tidak tersedia
+                        </div>
+                        @endif
+                    </div>
+
                     {{-- Total Amount --}}
                     <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-200/50">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                </div>
-                                <span class="text-slate-600 font-medium">Total Tagihan</span>
-                            </div>
-                            <p class="text-xl font-bold text-slate-800">Rp {{ number_format($pembayaran->total_harga, 0, ',', '.') }}</p>
+                            <span class="text-slate-700 font-bold">Total Pembayaran</span>
+                            <p class="text-xl font-bold text-slate-800">Rp{{ number_format($pembayaran->total_harga, 0, ',', '.') }}</p>
                         </div>
                     </div>
 
                     {{-- Pay Button --}}
-                    <button id="pay-button" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                    <button id="pay-button" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
-                        <span>Bayar Sekarang</span>
+                        <span>Pilih Pembayaran</span>
                     </button>
 
                     {{-- Security Note --}}
@@ -79,7 +125,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
-                        <span class="text-xs">Pembayaran aman via Midtrans</span>
+                        <span class="text-xs">Garansi 100% aman via Midtrans</span>
                     </div>
                 </div>
             </div>

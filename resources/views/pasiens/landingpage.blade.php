@@ -257,7 +257,7 @@
                             <div>
                                 <select name="hubungan" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required>
                                     <option value="" disabled selected>-- Hubungan dengan Anda --</option>
-                                    <option value="Diri Sendiri">👤 Diri Sendiri</option>
+                                    <option value="Diri Sendiri" {{ $hasDiriSendiri ? 'disabled' : '' }}>👤 Diri Sendiri {{ $hasDiriSendiri ? '(Sudah terdaftar)' : '' }}</option>
                                     <option value="Anak">👶 Anak</option>
                                     <option value="Suami/Istri">💑 Suami/Istri</option>
                                     <option value="Orang Tua">👴 Orang Tua</option>
@@ -266,7 +266,11 @@
                                     <option value="Teman">🤝 Teman</option>
                                     <option value="Lainnya">📝 Lainnya</option>
                                 </select>
-                                <p class="text-xs text-gray-400 mt-1 ml-1">👥 Siapa orang ini bagi Anda?</p>
+                                @if($hasDiriSendiri)
+                                    <p class="text-xs text-amber-500 mt-1 ml-1">⚠️ "Diri Sendiri" sudah terdaftar, maksimal 1 per akun</p>
+                                @else
+                                    <p class="text-xs text-gray-400 mt-1 ml-1">👥 Siapa orang ini bagi Anda?</p>
+                                @endif
                             </div>
                             
                             <div>
@@ -293,6 +297,12 @@
                         </h3>
                         <div class="space-y-3 max-h-72 overflow-y-auto">
                             @forelse($keluarga as $item)
+                                @php
+                                    // Cek apakah pasien ini memiliki rekam medis
+                                    $itemHasRekamMedis = \App\Models\Kunjungan::where('pasien_id', $item->id)
+                                        ->whereHas('rekamMedis')
+                                        ->exists();
+                                @endphp
                                 <div class="p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl hover:from-blue-50 hover:to-white transition-all duration-200 border border-gray-100 hover:border-blue-200 group">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-3">
@@ -325,6 +335,20 @@
                                             @endif
                                             <span class="text-xs text-gray-400 font-mono">RM: {{ $item->no_rekam_medis }}</span>
                                         </div>
+                                    </div>
+                                    {{-- Tombol Hapus --}}
+                                    <div class="mt-2 pt-2 border-t border-gray-100">
+                                        <form action="{{ route('pasiens.destroyPasienKeluarga', $item->id) }}" method="POST" 
+                                              onsubmit="return confirm('{{ $itemHasRekamMedis ? 'Data ini memiliki rekam medis. Jika dihapus, data akan dilepas dari akun Anda tapi rekam medis tetap tersimpan di arsip klinik. Lanjutkan?' : 'Hapus data ' . $item->nama . '? Data akan terhapus permanen.' }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full flex items-center justify-center gap-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 py-1.5 rounded-lg transition-all">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                                Hapus dari Akun
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             @empty

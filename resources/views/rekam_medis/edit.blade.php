@@ -214,7 +214,7 @@
                                                 placeholder="Keterangan (opsional)">
                                         </div>
                                         <button type="button" @click="removeTindakan(index)" class="p-3 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-colors duration-200" title="Hapus">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> 
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
                                         </button>
@@ -234,34 +234,24 @@
                         </div>
 
                         <!-- Total Preview -->
-                        <div class="bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-2xl text-white">
-                            <div class="flex justify-between items-center">
-                                <span class="font-semibold">Total Biaya (Preview)</span>
-                                <span class="text-2xl font-bold" x-text="'Rp ' + totalBiaya.toLocaleString('id-ID')"></span>
-                            </div>
-                            <p class="text-gray-400 text-sm mt-1">Biaya Pemeriksaan + Total Tindakan Medis</p>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center justify-between pt-6 border-t border-gray-100">
-                            <form action="{{ route('rekam_medis.destroy', $rekamMedis->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus data ini?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="inline-flex items-center px-4 py-2.5 border border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all duration-200">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="pt-6 border-t border-gray-100">
+                            <div class="flex items-center justify-end space-x-3">
+                                
+                                <button type="submit" form="delete-form" onclick="return confirm('Hapus data rekam medis ini? Data tidak dapat dikembalikan!');" 
+                                        class="inline-flex items-center px-6 py-3 border border-red-200 rounded-xl text-red-600 font-semibold hover:bg-red-50 hover:border-red-300 transition-all duration-200">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
-                                    Hapus Rekam Medis
+                                    Hapus
                                 </button>
-                            </form>
-                            
-                            <div class="flex items-center space-x-4">
+
                                 <a href="{{ route('rekam_medis.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                     Batal
                                 </a>
+
                                 <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 rounded-xl text-white font-semibold shadow-lg shadow-rose-500/30 hover:shadow-xl hover:shadow-rose-500/40 hover:from-rose-600 hover:to-pink-700 transform hover:-translate-y-0.5 transition-all duration-200">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -271,10 +261,14 @@
                             </div>
                         </div>
                     </form>
+                    <form id="delete-form" action="{{ route('rekam_medis.destroy', $rekamMedis->id) }}" method="POST" style="display: none;">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+
                 </div>
             </div>
 
-            <!-- Info Card -->
             <div class="mt-6 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-2xl p-6">
                 <div class="flex items-start">
                     <div class="flex-shrink-0 bg-gray-500 rounded-xl p-2">

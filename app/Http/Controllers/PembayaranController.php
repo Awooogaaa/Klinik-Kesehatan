@@ -117,8 +117,8 @@ class PembayaranController extends Controller
 
     public function show($id)
     {
-        // 1. Cari data pembayaran berdasarkan ID
-        $pembayaran = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter'])->findOrFail($id);
+        // 1. Cari data pembayaran berdasarkan ID (with rekamMedis for itemized breakdown)
+        $pembayaran = Pembayaran::with(['kunjungan.pasien', 'kunjungan.dokter.user', 'kunjungan.rekamMedis.tindakanMedis'])->findOrFail($id);
 
         // 2. Jika status sudah lunas (settlement/capture), arahkan ke nota saja (opsional)
         // if ($pembayaran->status_pembayaran == 'success') {

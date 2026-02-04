@@ -178,6 +178,19 @@ class PasienController extends Controller
             'hubungan' => ['required', 'string', 'max:50'],
         ]);
 
+        // Cek apakah sudah ada pasien dengan hubungan "Diri Sendiri" untuk akun ini
+        if ($request->hubungan === 'Diri Sendiri') {
+            $existingDiriSendiri = Pasien::where('user_id', Auth::id())
+                ->where('hubungan', 'Diri Sendiri')
+                ->exists();
+            
+            if ($existingDiriSendiri) {
+                return back()->withErrors([
+                    'hubungan' => 'Anda sudah memiliki data "Diri Sendiri" yang terdaftar. Setiap akun hanya boleh memiliki maksimal 1 data "Diri Sendiri".'
+                ])->withInput();
+            }
+        }
+
         DB::transaction(function () use ($request) {
             $pasien = Pasien::create([
                 'user_id' => Auth::id(), // Link otomatis ke akun yang sedang login
@@ -198,20 +211,23 @@ class PasienController extends Controller
         return redirect()->route('pasiens.landingpage')->with('success', 'Data berhasil ditambahkan.');
     }
 
-   public function landingpage() 
-{
-    $user = Auth::user();
-    $keluarga = Pasien::where('user_id', $user->id)->get();
-    $keluargaIds = $keluarga->pluck('id');
+    public function landingpage() 
+    {
+        $user = Auth::user();
+        $keluarga = Pasien::where('user_id', $user->id)->get();
+        $keluargaIds = $keluarga->pluck('id');
 
-    // Eager Load diperbaiki: 'dokter.user' agar bisa ambil nama dari tabel users jika perlu
-    $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.tindakanMedis']) 
-                ->whereIn('pasien_id', $keluargaIds)
-                ->latest()
-                ->get();
+        // Cek apakah sudah ada pasien dengan hubungan "Diri Sendiri"
+        $hasDiriSendiri = $keluarga->where('hubungan', 'Diri Sendiri')->count() > 0;
 
-    return view('pasiens.landingpage', compact('keluarga', 'riwayat'));
-}
+        // Eager Load diperbaiki: 'dokter.user' agar bisa ambil nama dari tabel users jika perlu
+        $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.tindakanMedis']) 
+                    ->whereIn('pasien_id', $keluargaIds)
+                    ->latest()
+                    ->get();
+
+        return view('pasiens.landingpage', compact('keluarga', 'riwayat', 'hasDiriSendiri'));
+    }
 
     public function nota($id)
     {
@@ -248,6 +264,38 @@ class PasienController extends Controller
         $kunjungan->delete();
 
         return back()->with('success', 'Pengajuan kunjungan berhasil dibatalkan.');
+    }
+
+    /**
+     * Menghapus pasien dari akun keluarga (dari landing page pasien).
+     * Jika pasien memiliki rekam medis, data tetap tersimpan tapi detach dari akun.
+     */
+    public function destroyPasienKeluarga(Pasien $pasien)
+    {
+        // 1. Security Check: Pastikan pasien ini milik user yang login
+        if ($pasien->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak berhak menghapus data ini.');
+        }
+
+        // 2. Cek apakah pasien memiliki kunjungan dengan rekam medis
+        $hasRekamMedis = Kunjungan::where('pasien_id', $pasien->id)
+            ->whereHas('rekamMedis')
+            ->exists();
+
+        if ($hasRekamMedis) {
+            // Jika ada rekam medis, detach dari akun (set user_id ke null)
+            // Data pasien dan rekam medis tetap tersimpan untuk keperluan arsip
+            $pasien->update(['user_id' => null]);
+            return redirect()->route('pasiens.landingpage')
+                ->with('success', 'Data berhasil dihapus dari akun Anda. Catatan: Data rekam medis tetap tersimpan untuk arsip klinik.');
+        } else {
+            // Jika tidak ada rekam medis, hapus pasien sepenuhnya
+            // Hapus juga semua kunjungan yang belum ada rekam medis
+            Kunjungan::where('pasien_id', $pasien->id)->delete();
+            $pasien->delete();
+            return redirect()->route('pasiens.landingpage')
+                ->with('success', 'Data berhasil dihapus.');
+        }
     }
 
     public function edit(Pasien $pasien)
