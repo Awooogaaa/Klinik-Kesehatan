@@ -178,6 +178,16 @@ class PasienController extends Controller
             'hubungan' => ['required', 'string', 'max:50'],
         ]);
 
+        // Cek apakah sudah mencapai batas maksimal 20 keluarga
+        $keluargaCount = Pasien::where('user_id', Auth::id())->count();
+        $maxKeluarga = 20;
+        
+        if ($keluargaCount >= $maxKeluarga) {
+            return back()->withErrors([
+                'keluarga' => 'Anda sudah mencapai batas maksimal ' . $maxKeluarga . ' orang yang terdaftar di akun Anda.'
+            ])->withInput();
+        }
+
         // Cek apakah sudah ada pasien dengan hubungan "Diri Sendiri" untuk akun ini
         if ($request->hubungan === 'Diri Sendiri') {
             $existingDiriSendiri = Pasien::where('user_id', Auth::id())
@@ -220,13 +230,17 @@ class PasienController extends Controller
         // Cek apakah sudah ada pasien dengan hubungan "Diri Sendiri"
         $hasDiriSendiri = $keluarga->where('hubungan', 'Diri Sendiri')->count() > 0;
 
+        // Info limit keluarga
+        $keluargaCount = $keluarga->count();
+        $maxKeluarga = 20;
+
         // Eager Load diperbaiki: 'dokter.user' agar bisa ambil nama dari tabel users jika perlu
         $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.tindakanMedis']) 
                     ->whereIn('pasien_id', $keluargaIds)
                     ->latest()
                     ->get();
 
-        return view('pasiens.landingpage', compact('keluarga', 'riwayat', 'hasDiriSendiri'));
+        return view('pasiens.landingpage', compact('keluarga', 'riwayat', 'hasDiriSendiri', 'keluargaCount', 'maxKeluarga'));
     }
 
     public function nota($id)

@@ -223,7 +223,7 @@
                 <div id="tambah-keluarga" class="space-y-6">
                     {{-- Form Tambah Keluarga --}}
                     <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
-                        <div class="flex items-center space-x-3 mb-5">
+                        <div class="flex items-center space-x-3 mb-3">
                             <div class="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -232,61 +232,96 @@
                             <h2 class="text-lg font-bold text-gray-900">Tambah Keluarga</h2>
                         </div>
 
-                        <form method="post" action="{{ route('pasiens.storeKeluarga') }}" class="space-y-4">
-                            @csrf
-                            <input type="text" name="nama" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="Nama Lengkap" required />
-                            
-                            {{-- NIK Input --}}
-                            <div>
-                                <input type="text" name="nik" pattern="[0-9]{16}" maxlength="16" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="NIK (16 digit)" />
-                                <p class="text-xs text-gray-400 mt-1 ml-1">🪪 Nomor Induk Kependudukan (opsional)</p>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-3">
-                                <select name="jenis_kelamin" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition">
-                                    <option value="Laki-laki">Laki-laki</option>
-                                    <option value="Perempuan">Perempuan</option>
-                                </select>
-                                <div>
-                                    <input type="date" name="tanggal_lahir" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required />
-                                    <p class="text-xs text-gray-400 mt-1 ml-1">📅 Tanggal Lahir</p>
-                                </div>
-                            </div>
-                            
-                            {{-- Hubungan dengan Pemilik Akun --}}
-                            <div>
-                                <select name="hubungan" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required>
-                                    <option value="" disabled selected>-- Hubungan dengan Anda --</option>
-                                    <option value="Diri Sendiri" {{ $hasDiriSendiri ? 'disabled' : '' }}>👤 Diri Sendiri {{ $hasDiriSendiri ? '(Sudah terdaftar)' : '' }}</option>
-                                    <option value="Anak">👶 Anak</option>
-                                    <option value="Suami/Istri">💑 Suami/Istri</option>
-                                    <option value="Orang Tua">👴 Orang Tua</option>
-                                    <option value="Saudara">👨‍👩‍👧‍👦 Saudara</option>
-                                    <option value="Tetangga">🏘️ Tetangga</option>
-                                    <option value="Teman">🤝 Teman</option>
-                                    <option value="Lainnya">📝 Lainnya</option>
-                                </select>
-                                @if($hasDiriSendiri)
-                                    <p class="text-xs text-amber-500 mt-1 ml-1">⚠️ "Diri Sendiri" sudah terdaftar, maksimal 1 per akun</p>
-                                @else
-                                    <p class="text-xs text-gray-400 mt-1 ml-1">👥 Siapa orang ini bagi Anda?</p>
-                                @endif
-                            </div>
-                            
-                            <div>
-                                <input type="tel" name="no_telepon" pattern="[0-9]*" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="No. HP / WhatsApp (angka saja)" required />
-                                <p class="text-xs text-gray-400 mt-1 ml-1">📱 Hanya boleh angka, contoh: 08123456789</p>
-                            </div>
-                            <textarea name="alamat" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" rows="2" placeholder="Alamat Domisili" required></textarea>
-                            <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
-                                <span class="flex items-center justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                    Simpan Data
+                        {{-- Limit Indicator --}}
+                        <div class="mb-5">
+                            <div class="flex items-center justify-between text-sm mb-2">
+                                <span class="text-gray-500">Slot terpakai</span>
+                                <span class="font-semibold {{ $keluargaCount >= $maxKeluarga ? 'text-red-600' : 'text-gray-700' }}">
+                                    {{ $keluargaCount }}/{{ $maxKeluarga }}
                                 </span>
-                            </button>
-                        </form>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full transition-all duration-300 {{ $keluargaCount >= $maxKeluarga ? 'bg-red-500' : 'bg-gradient-to-r from-purple-500 to-pink-500' }}" 
+                                     style="width: {{ min(($keluargaCount / $maxKeluarga) * 100, 100) }}%"></div>
+                            </div>
+                            @if($keluargaCount >= $maxKeluarga)
+                                <p class="text-xs text-red-500 mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    Batas maksimal tercapai. Hapus data untuk menambah baru.
+                                </p>
+                            @endif
+                        </div>
+
+                        @if($keluargaCount >= $maxKeluarga)
+                            {{-- Form disabled when limit reached --}}
+                            <div class="bg-gray-50 p-6 rounded-2xl text-center">
+                                <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-600 font-medium">Batas maksimal {{ $maxKeluarga }} orang tercapai</p>
+                                <p class="text-gray-400 text-sm mt-1">Hapus salah satu data untuk menambahkan orang baru</p>
+                            </div>
+                        @else
+                            <form method="post" action="{{ route('pasiens.storeKeluarga') }}" class="space-y-4">
+                                @csrf
+                                <input type="text" name="nama" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="Nama Lengkap" required />
+                                
+                                {{-- NIK Input --}}
+                                <div>
+                                    <input type="text" name="nik" pattern="[0-9]{16}" maxlength="16" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="NIK (16 digit)" />
+                                    <p class="text-xs text-gray-400 mt-1 ml-1">🪪 Nomor Induk Kependudukan (opsional)</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <select name="jenis_kelamin" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition">
+                                        <option value="Laki-laki">Laki-laki</option>
+                                        <option value="Perempuan">Perempuan</option>
+                                    </select>
+                                    <div>
+                                        <input type="date" name="tanggal_lahir" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required />
+                                        <p class="text-xs text-gray-400 mt-1 ml-1">📅 Tanggal Lahir</p>
+                                    </div>
+                                </div>
+                                
+                                {{-- Hubungan dengan Pemilik Akun --}}
+                                <div>
+                                    <select name="hubungan" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm text-gray-600 transition" required>
+                                        <option value="" disabled selected>-- Hubungan dengan Anda --</option>
+                                        <option value="Diri Sendiri" {{ $hasDiriSendiri ? 'disabled' : '' }}>👤 Diri Sendiri {{ $hasDiriSendiri ? '(Sudah terdaftar)' : '' }}</option>
+                                        <option value="Anak">👶 Anak</option>
+                                        <option value="Suami/Istri">💑 Suami/Istri</option>
+                                        <option value="Orang Tua">👴 Orang Tua</option>
+                                        <option value="Saudara">👨‍👩‍👧‍👦 Saudara</option>
+                                        <option value="Tetangga">🏘️ Tetangga</option>
+                                        <option value="Teman">🤝 Teman</option>
+                                        <option value="Lainnya">📝 Lainnya</option>
+                                    </select>
+                                    @if($hasDiriSendiri)
+                                        <p class="text-xs text-amber-500 mt-1 ml-1">⚠️ "Diri Sendiri" sudah terdaftar, maksimal 1 per akun</p>
+                                    @else
+                                        <p class="text-xs text-gray-400 mt-1 ml-1">👥 Siapa orang ini bagi Anda?</p>
+                                    @endif
+                                </div>
+                                
+                                <div>
+                                    <input type="tel" name="no_telepon" pattern="[0-9]*" inputmode="numeric" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" placeholder="No. HP / WhatsApp (angka saja)" required />
+                                    <p class="text-xs text-gray-400 mt-1 ml-1">📱 Hanya boleh angka, contoh: 08123456789</p>
+                                </div>
+                                <textarea name="alamat" class="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 py-3 px-4 text-sm transition" rows="2" placeholder="Alamat Domisili" required></textarea>
+                                <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+                                    <span class="flex items-center justify-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Simpan Data
+                                    </span>
+                                </button>
+                            </form>
+                        @endif
                     </div>
 
                     {{-- Daftar Anggota Terdaftar --}}
