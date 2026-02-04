@@ -97,15 +97,37 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('kunjungans.update', $kunjungan) }}" method="POST" class="space-y-6">
+                    <form action="{{ route('kunjungans.update', $kunjungan) }}" method="POST" class="space-y-6"
+                        x-data="{ 
+                            selectedStatus: '{{ $kunjungan->status }}',
+                            hasRekamMedis: {{ $hasRekamMedis ? 'true' : 'false' }},
+                            originalStatus: '{{ $kunjungan->status }}'
+                        }">
                         @csrf
                         @method('PUT')
                         
                         <input type="hidden" name="pasien_id" value="{{ $kunjungan->pasien_id }}">
                         <input type="hidden" name="keluhan_awal" value="{{ $kunjungan->keluhan_awal }}">
 
-                        <!-- Pilih Dokter -->
-                        <div class="group">
+                        <!-- Warning: Rekam Medis sudah tercatat -->
+                        @if($hasRekamMedis)
+                        <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-blue-500 rounded-lg p-1.5 mr-3">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-blue-800">Rekam Medis Sudah Tercatat</p>
+                                    <p class="text-xs text-blue-600">Status kunjungan tidak dapat diubah karena rekam medis sudah tercatat untuk kunjungan ini.</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Pilih Dokter - Hidden when status is batal -->
+                        <div class="group" x-show="selectedStatus !== 'batal'" x-transition>
                             <label for="dokter_id" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
                                 <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -113,7 +135,7 @@
                                 Pilih Dokter <span class="text-red-500 ml-1">*</span>
                             </label>
                             <div class="relative">
-                                <select name="dokter_id" id="dokter_id" required
+                                <select name="dokter_id" id="dokter_id" :required="selectedStatus !== 'batal'"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white appearance-none cursor-pointer">
                                     <option value="">-- Pilih Dokter --</option>
                                     @foreach($dokters as $dokter)
@@ -133,20 +155,35 @@
                             @enderror
                         </div>
 
-                        <!-- Tanggal & Jam -->
-                        <div class="group">
+                        <!-- Tanggal & Jam - Hidden when status is batal -->
+                        <div class="group" x-show="selectedStatus !== 'batal'" x-transition>
                             <label for="waktu_kunjungan" class="flex items-center text-sm font-semibold text-gray-700 mb-2">
                                 <svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 Tanggal & Jam Periksa <span class="text-red-500 ml-1">*</span>
                             </label>
-                            <input type="datetime-local" name="waktu_kunjungan" id="waktu_kunjungan" required
+                            <input type="datetime-local" name="waktu_kunjungan" id="waktu_kunjungan" :required="selectedStatus !== 'batal'"
                                 value="{{ $kunjungan->waktu_kunjungan ? $kunjungan->waktu_kunjungan->format('Y-m-d\TH:i') : '' }}"
                                 class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white">
                             @error('waktu_kunjungan')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <!-- Notice when status is batal -->
+                        <div class="p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-2xl" x-show="selectedStatus === 'batal'" x-transition>
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-red-500 rounded-lg p-1.5 mr-3">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-red-800">Kunjungan Akan Dibatalkan</p>
+                                    <p class="text-xs text-red-600">Data dokter dan jadwal akan dihapus jika kunjungan dibatalkan.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Status -->
@@ -159,9 +196,13 @@
                             </label>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <!-- Menunggu -->
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="status" value="menunggu" class="peer sr-only" @if($kunjungan->status == 'menunggu') checked @endif required>
-                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-amber-500 peer-checked:bg-amber-50 hover:border-gray-300 hover:bg-gray-50">
+                                <label class="relative" :class="{ 'cursor-not-allowed opacity-60': hasRekamMedis, 'cursor-pointer': !hasRekamMedis }">
+                                    <input type="radio" name="status" value="menunggu" class="peer sr-only" 
+                                        @if($kunjungan->status == 'menunggu') checked @endif 
+                                        @change="selectedStatus = 'menunggu'"
+                                        :disabled="hasRekamMedis"
+                                        required>
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-disabled:bg-gray-100 peer-disabled:cursor-not-allowed" :class="{ 'hover:border-gray-300 hover:bg-gray-50': !hasRekamMedis }">
                                         <svg class="w-6 h-6 mx-auto mb-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -170,9 +211,12 @@
                                 </label>
                                 
                                 <!-- Disetujui -->
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="status" value="disetujui" class="peer sr-only" @if($kunjungan->status == 'disetujui') checked @endif>
-                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50">
+                                <label class="relative" :class="{ 'cursor-not-allowed opacity-60': hasRekamMedis, 'cursor-pointer': !hasRekamMedis }">
+                                    <input type="radio" name="status" value="disetujui" class="peer sr-only" 
+                                        @if($kunjungan->status == 'disetujui') checked @endif
+                                        @change="selectedStatus = 'disetujui'"
+                                        :disabled="hasRekamMedis">
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-disabled:bg-gray-100 peer-disabled:cursor-not-allowed" :class="{ 'hover:border-gray-300 hover:bg-gray-50': !hasRekamMedis }">
                                         <svg class="w-6 h-6 mx-auto mb-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -181,20 +225,29 @@
                                 </label>
                                 
                                 <!-- Selesai -->
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="status" value="selesai" class="peer sr-only" @if($kunjungan->status == 'selesai') checked @endif>
-                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:border-gray-300 hover:bg-gray-50">
+                                <label class="relative" :class="{ 'cursor-not-allowed opacity-60': !hasRekamMedis, 'cursor-pointer': hasRekamMedis }">
+                                    <input type="radio" name="status" value="selesai" class="peer sr-only" 
+                                        @if($kunjungan->status == 'selesai') checked @endif
+                                        @change="selectedStatus = 'selesai'"
+                                        :disabled="!hasRekamMedis && originalStatus !== 'selesai'">
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-disabled:bg-gray-100 peer-disabled:cursor-not-allowed" :class="{ 'hover:border-gray-300 hover:bg-gray-50': hasRekamMedis }">
                                         <svg class="w-6 h-6 mx-auto mb-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>
                                         <span class="text-sm font-medium text-gray-700">Selesai</span>
+                                        <template x-if="!hasRekamMedis && originalStatus !== 'selesai'">
+                                            <p class="text-xs text-red-500 mt-1">Rekam Medis Belum tercatat</p>
+                                        </template>
                                     </div>
                                 </label>
                                 
                                 <!-- Batal -->
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="status" value="batal" class="peer sr-only" @if($kunjungan->status == 'batal') checked @endif>
-                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-gray-300 hover:bg-gray-50">
+                                <label class="relative" :class="{ 'cursor-not-allowed opacity-60': hasRekamMedis, 'cursor-pointer': !hasRekamMedis }">
+                                    <input type="radio" name="status" value="batal" class="peer sr-only" 
+                                        @if($kunjungan->status == 'batal') checked @endif
+                                        @change="selectedStatus = 'batal'"
+                                        :disabled="hasRekamMedis">
+                                    <div class="p-4 border-2 border-gray-200 rounded-xl text-center transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-disabled:bg-gray-100 peer-disabled:cursor-not-allowed" :class="{ 'hover:border-gray-300 hover:bg-gray-50': !hasRekamMedis }">
                                         <svg class="w-6 h-6 mx-auto mb-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>

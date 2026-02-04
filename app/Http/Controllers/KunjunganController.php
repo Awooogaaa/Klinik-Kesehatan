@@ -93,11 +93,47 @@ class KunjunganController extends Controller
     {
         $pasiens = Pasien::orderBy('nama')->get();
         $dokters = Dokter::with('user')->get();
-        return view('kunjungans.edit', compact('kunjungan', 'pasiens', 'dokters'));
+        $hasRekamMedis = $kunjungan->rekamMedis()->exists();
+        return view('kunjungans.edit', compact('kunjungan', 'pasiens', 'dokters', 'hasRekamMedis'));
     }
 
     public function update(Request $request, Kunjungan $kunjungan)
     {
+        $hasRekamMedis = $kunjungan->rekamMedis()->exists();
+        
+        // Jika rekam medis sudah ada, status tidak boleh diubah
+        if ($hasRekamMedis && $request->status !== $kunjungan->status) {
+            return back()->withErrors([
+                'status' => 'Status tidak dapat diubah karena rekam medis sudah tercatat untuk kunjungan ini.'
+            ])->withInput();
+        }
+        
+        // Jika rekam medis belum ada, status 'selesai' tidak boleh dipilih
+        if (!$hasRekamMedis && $request->status === 'selesai') {
+            return back()->withErrors([
+                'status' => 'Status selesai tidak dapat dipilih karena rekam medis belum tercatat.'
+            ])->withInput();
+        }
+        
+        // Jika status batal, dokter dan waktu tidak diperlukan
+        if ($request->status === 'batal') {
+            $request->validate([
+                'pasien_id' => 'required|exists:pasiens,id',
+                'keluhan_awal' => 'required|string',
+                'status' => 'required|in:menunggu,disetujui,selesai,batal',
+            ]);
+            
+            $kunjungan->update([
+                'pasien_id' => $request->pasien_id,
+                'keluhan_awal' => $request->keluhan_awal,
+                'status' => 'batal',
+                'dokter_id' => null,
+                'waktu_kunjungan' => null,
+            ]);
+            
+            return redirect()->route('kunjungans.index')->with('success', 'Kunjungan dibatalkan.');
+        }
+        
         $request->validate([
             'pasien_id' => 'required|exists:pasiens,id',
             'keluhan_awal' => 'required|string',

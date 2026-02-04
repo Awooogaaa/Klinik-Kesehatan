@@ -226,7 +226,16 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            @if($visit->dokter)
+                                            @if($visit->status === 'batal')
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg flex items-center justify-center shadow">
+                                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                        </svg>
+                                                    </div>
+                                                    <span class="ml-3 text-sm font-semibold text-red-600">Dibatalkan</span>
+                                                </div>
+                                            @elseif($visit->dokter)
                                                 <div class="flex items-center">
                                                     <div class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center shadow">
                                                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
