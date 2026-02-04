@@ -166,9 +166,15 @@
             <button onclick="window.print()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition">
                 Cetak
             </button>
+            @if(auth()->check() && auth()->user()->role == 'admin')
+            <a href="{{ route('pembayarans.index') }}" class="px-6 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition">
+                Kembali ke Pembayaran
+            </a>
+            @else
             <a href="{{ route('pasiens.landingpage') }}" class="px-6 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition">
                 Kembali
             </a>
+            @endif
         </div>
     </div>
 

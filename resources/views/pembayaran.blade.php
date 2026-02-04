@@ -112,44 +112,88 @@
                         </div>
                     </div>
 
-                    {{-- Pay Button --}}
-                    <button id="pay-button" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                        <span>Pilih Pembayaran</span>
-                    </button>
+                    {{-- Pay Button or Already Paid Message --}}
+                    @if($pembayaran->status_pembayaran == 'lunas')
+                        {{-- Already Paid --}}
+                        <div class="bg-gradient-to-r from-emerald-50 to-green-50 p-5 rounded-xl border border-emerald-200">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-emerald-700">Pembayaran Berhasil!</p>
+                                    <p class="text-sm text-emerald-600">Transaksi ini sudah lunas.</p>
+                                </div>
+                            </div>
+                        </div>
 
-                    {{-- Security Note --}}
-                    <div class="flex items-center justify-center gap-2 text-slate-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        <span class="text-xs">Garansi 100% aman via Midtrans</span>
-                    </div>
+                        {{-- View Nota Button --}}
+                        @if($pembayaran->kunjungan && $pembayaran->kunjungan->rekamMedis)
+                        <a href="{{ auth()->user()->role == 'admin' ? route('admin.nota', $pembayaran->kunjungan_id) : route('pasiens.nota', $pembayaran->kunjungan_id) }}" 
+                           class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>Lihat Nota</span>
+                        </a>
+                        @endif
+                    @else
+                        {{-- Pay Button for Pending Status --}}
+                        <button id="pay-button" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span>Pilih Pembayaran</span>
+                        </button>
+
+                        {{-- Security Note --}}
+                        <div class="flex items-center justify-center gap-2 text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            <span class="text-xs">Garansi 100% aman via Midtrans</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            {{-- Back Link --}}
+            {{-- Back Link - Role-based --}}
             <div class="text-center mt-6">
+                @if(auth()->user()->role == 'admin')
+                <a href="{{ route('pembayarans.index') }}" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Kembali ke Manajemen Pembayaran
+                </a>
+                @else
                 <a href="{{ url('/landingpage-pasien') }}" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
                     Kembali ke Dashboard
                 </a>
+                @endif
             </div>
         </div>
     </div>
 
     @push('scripts')
+    @if($pembayaran->status_pembayaran == 'pending')
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
     <script type="text/javascript">
         document.getElementById('pay-button').onclick = function(){
             window.snap.pay('{{ $snapToken }}', {
                 onSuccess: function(result){
                     alert("Pembayaran Berhasil!");
+                    // Redirect based on role
+                    @if(auth()->user()->role == 'admin')
+                    window.location.href = "{{ route('pembayarans.index') }}";
+                    @else
                     window.location.href = "/landingpage-pasien";
+                    @endif
                 },
                 onPending: function(result){
                     alert("Menunggu pembayaran!");
@@ -160,5 +204,7 @@
             });
         };
     </script>
+    @endif
     @endpush
+
 </x-app-layout>

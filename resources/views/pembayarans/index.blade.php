@@ -291,6 +291,17 @@
                                                     </form>
                                                 @endif
 
+                                                @if($item->status_pembayaran == 'pending')
+                                                {{-- Bayar Online button for pending status --}}
+                                                <a href="{{ route('pembayarans.show', $item->id) }}" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-amber-600 hover:to-orange-700 transform hover:-translate-y-0.5 transition-all duration-200">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                                    </svg>
+                                                    Bayar Online
+                                                </a>
+                                                @endif
+
+                                                {{-- Nota button - only show if rekamMedis exists --}}
                                                 @if($item->kunjungan && $item->kunjungan->rekamMedis)
                                                 <a href="{{ route('admin.nota', $item->kunjungan_id) }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-green-600 hover:to-emerald-700 transform hover:-translate-y-0.5 transition-all duration-200">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,13 +311,6 @@
                                                 </a>
                                                 @endif
 
-                                                <a href="{{ route('pembayarans.show', $item->id) }}" class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg text-white text-xs font-semibold shadow-md hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                                    </svg>
-                                                    Detail
-                                                </a>
 
                                                 <form action="{{ route('pembayarans.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus riwayat pembayaran ini?');">
                                                     @csrf
