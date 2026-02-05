@@ -53,6 +53,12 @@ class KunjunganController extends Controller
 
     public function create()
     {
+        // Dokter tidak bisa menambah kunjungan baru
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            return redirect()->route('kunjungans.index')->with('error', 'Dokter tidak memiliki akses untuk menambah kunjungan baru.');
+        }
+        
         $pasiens = Pasien::orderBy('nama')->get();
         // Hanya dokter yang bisa dipilih
         $dokters = Dokter::with('user')->get(); 
@@ -61,13 +67,21 @@ class KunjunganController extends Controller
 
     public function store(Request $request)
     {
+        // Dokter tidak bisa menambah kunjungan baru
+        $user = auth()->user();
+        if ($user && $user->role === 'dokter') {
+            return redirect()->route('kunjungans.index')->with('error', 'Dokter tidak memiliki akses untuk menambah kunjungan baru.');
+        }
+        
         $request->validate([
             'pasien_id' => 'required|exists:pasiens,id',
             'keluhan_awal' => 'required|string',
             // Dokter & Waktu bisa null dulu kalau Admin belum setujui saat input awal
             'dokter_id' => 'nullable|exists:dokters,id',
-            'waktu_kunjungan' => 'nullable|date',
+            'waktu_kunjungan' => 'nullable|date|after:now',
             'status' => 'required|in:menunggu,disetujui,selesai,batal',
+        ], [
+            'waktu_kunjungan.after' => 'Tanggal dan jam periksa tidak boleh sebelum waktu sekarang.',
         ]);
 
         // Cek konflik jadwal dokter (jika dokter dan waktu sudah ditentukan)
@@ -94,12 +108,35 @@ class KunjunganController extends Controller
         $pasiens = Pasien::orderBy('nama')->get();
         $dokters = Dokter::with('user')->get();
         $hasRekamMedis = $kunjungan->rekamMedis()->exists();
-        return view('kunjungans.edit', compact('kunjungan', 'pasiens', 'dokters', 'hasRekamMedis'));
+        
+        // Check if user is dokter
+        $user = auth()->user();
+        $isDokter = $user && $user->role === 'dokter';
+        
+        return view('kunjungans.edit', compact('kunjungan', 'pasiens', 'dokters', 'hasRekamMedis', 'isDokter'));
     }
 
     public function update(Request $request, Kunjungan $kunjungan)
     {
         $hasRekamMedis = $kunjungan->rekamMedis()->exists();
+        $user = auth()->user();
+        $isDokter = $user && $user->role === 'dokter';
+        
+        // Validasi khusus untuk dokter
+        if ($isDokter) {
+            // Dokter tidak bisa mengubah status ke menunggu
+            if ($request->status === 'menunggu') {
+                return back()->withErrors([
+                    'status' => 'Dokter tidak dapat memilih status Menunggu.'
+                ])->withInput();
+            }
+            
+            // Dokter tidak bisa mengubah dokter_id
+            // Force use original dokter_id value
+            $request->merge([
+                'dokter_id' => $kunjungan->dokter_id,
+            ]);
+        }
         
         // Jika rekam medis sudah ada, status tidak boleh diubah
         if ($hasRekamMedis && $request->status !== $kunjungan->status) {
@@ -138,8 +175,10 @@ class KunjunganController extends Controller
             'pasien_id' => 'required|exists:pasiens,id',
             'keluhan_awal' => 'required|string',
             'dokter_id' => 'required|exists:dokters,id',
-            'waktu_kunjungan' => 'required|date',
+            'waktu_kunjungan' => 'required|date|after:now',
             'status' => 'required|in:menunggu,disetujui,selesai,batal',
+        ], [
+            'waktu_kunjungan.after' => 'Tanggal dan jam periksa tidak boleh sebelum waktu sekarang.',
         ]);
 
         // Cek konflik jadwal dokter (exclude kunjungan ini sendiri)

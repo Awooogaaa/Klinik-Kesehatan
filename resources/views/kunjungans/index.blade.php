@@ -98,12 +98,14 @@
                             <h3 class="text-lg font-semibold text-gray-800">Daftar Kunjungan</h3>
                         </div>
                         
+                        @if(auth()->user()->role !== 'dokter')
                         <a href="{{ route('kunjungans.create') }}" class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 border border-transparent rounded-xl font-semibold text-sm text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:from-violet-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transform hover:-translate-y-0.5 transition-all duration-200">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
                             Daftar Kunjungan Baru
                         </a>
+                        @endif
                     </div>
                 </div>
 
@@ -304,6 +306,7 @@
                                                     </svg>
                                                 </div>
                                                 <p class="text-gray-500 text-lg font-medium mb-2">Belum ada data kunjungan</p>
+                                                @if(auth()->user()->role !== 'dokter')
                                                 <p class="text-gray-400 text-sm mb-4">Mulai tambahkan kunjungan pertama</p>
                                                 <a href="{{ route('kunjungans.create') }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg text-white text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
                                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,6 +314,9 @@
                                                     </svg>
                                                     Daftar Kunjungan Pertama
                                                 </a>
+                                                @else
+                                                <p class="text-gray-400 text-sm">Tidak ada kunjungan yang tersedia</p>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
