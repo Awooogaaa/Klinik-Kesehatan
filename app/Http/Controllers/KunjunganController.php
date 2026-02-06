@@ -157,7 +157,7 @@ class KunjunganController extends Controller
             $request->validate([
                 'pasien_id' => 'required|exists:pasiens,id',
                 'keluhan_awal' => 'required|string',
-                'status' => 'required|in:menunggu,disetujui,selesai,batal',
+                'status' => 'required|in:menunggu,disetujui,selesai,batal,pending_konfirmasi',
             ]);
             
             $kunjungan->update([
@@ -166,6 +166,7 @@ class KunjunganController extends Controller
                 'status' => 'batal',
                 'dokter_id' => null,
                 'waktu_kunjungan' => null,
+                'waktu_kunjungan_lama' => null,
             ]);
             
             return redirect()->route('kunjungans.index')->with('success', 'Kunjungan dibatalkan.');
@@ -176,7 +177,7 @@ class KunjunganController extends Controller
             'keluhan_awal' => 'required|string',
             'dokter_id' => 'required|exists:dokters,id',
             'waktu_kunjungan' => 'required|date|after:now',
-            'status' => 'required|in:menunggu,disetujui,selesai,batal',
+            'status' => 'required|in:menunggu,disetujui,selesai,batal,pending_konfirmasi',
         ], [
             'waktu_kunjungan.after' => 'Tanggal dan jam periksa tidak boleh sebelum waktu sekarang.',
         ]);
@@ -192,6 +193,21 @@ class KunjunganController extends Controller
             return back()->withErrors([
                 'waktu_kunjungan' => 'Dokter sudah memiliki jadwal kunjungan pada waktu tersebut. Silakan pilih waktu lain.'
             ])->withInput();
+        }
+
+        // Cek apakah dokter mengubah waktu kunjungan
+        $waktuBaru = $request->waktu_kunjungan;
+        $waktuLama = $kunjungan->waktu_kunjungan ? $kunjungan->waktu_kunjungan->format('Y-m-d\TH:i') : null;
+        
+        if ($isDokter && $waktuLama && $waktuBaru !== $waktuLama && $kunjungan->status === 'disetujui') {
+            // Dokter mengubah jadwal yang sudah disetujui -> perlu konfirmasi pasien
+            $kunjungan->update([
+                'waktu_kunjungan_lama' => $kunjungan->waktu_kunjungan,
+                'waktu_kunjungan' => $request->waktu_kunjungan,
+                'status' => 'pending_konfirmasi',
+            ]);
+            
+            return redirect()->route('kunjungans.index')->with('success', 'Jadwal berhasil diubah. Menunggu konfirmasi dari pasien.');
         }
 
         $kunjungan->update($request->all());

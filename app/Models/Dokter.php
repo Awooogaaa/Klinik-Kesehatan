@@ -31,11 +31,11 @@ class Dokter extends Model
     }
 
     /**
-     * Relasi many-to-many ke Perawat yang membantu dokter ini.
+     * Relasi one-to-many ke Perawat yang membantu dokter ini.
+     * 1 dokter bisa dibantu oleh banyak perawat.
      */
     public function perawats()
     {
-        return $this->belongsToMany(Perawat::class, 'dokter_perawat')
-                    ->withTimestamps();
+        return $this->hasMany(Perawat::class, 'dokter_id');
     }
 }

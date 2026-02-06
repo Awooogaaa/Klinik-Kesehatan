@@ -269,22 +269,31 @@
                                             @php
                                                 $statusStyles = [
                                                     'menunggu' => 'from-amber-400 to-orange-500',
+                                                    'pending_konfirmasi' => 'from-orange-500 to-red-500',
                                                     'disetujui' => 'from-blue-500 to-indigo-600',
                                                     'selesai' => 'from-emerald-400 to-green-500',
                                                     'batal' => 'from-red-500 to-rose-600',
                                                 ];
                                                 $statusIcons = [
                                                     'menunggu' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+                                                    'pending_konfirmasi' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
                                                     'disetujui' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
                                                     'selesai' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
                                                     'batal' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
                                                 ];
+                                                $statusLabels = [
+                                                    'menunggu' => 'Menunggu',
+                                                    'pending_konfirmasi' => 'Pending Konfirmasi',
+                                                    'disetujui' => 'Disetujui',
+                                                    'selesai' => 'Selesai',
+                                                    'batal' => 'Batal',
+                                                ];
                                             @endphp
-                                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r {{ $statusStyles[$visit->status] }} text-white shadow-sm">
+                                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r {{ $statusStyles[$visit->status] ?? 'from-gray-400 to-gray-500' }} text-white shadow-sm">
                                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    {!! $statusIcons[$visit->status] !!}
+                                                    {!! $statusIcons[$visit->status] ?? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>' !!}
                                                 </svg>
-                                                {{ ucfirst($visit->status) }}
+                                                {{ $statusLabels[$visit->status] ?? ucfirst($visit->status) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">

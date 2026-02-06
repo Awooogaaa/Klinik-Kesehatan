@@ -13,6 +13,7 @@ class Kunjungan extends Model
 
     protected $casts = [
         'waktu_kunjungan' => 'datetime',
+        'waktu_kunjungan_lama' => 'datetime',
     ];
 
     public function pasien()

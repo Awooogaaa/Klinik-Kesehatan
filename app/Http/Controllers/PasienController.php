@@ -259,6 +259,11 @@ class PasienController extends Controller
             return back()->with('error', 'Rekam medis belum tersedia.');
         }
 
+        // Cek apakah pembayaran sudah lunas (nota hanya bisa dilihat setelah lunas)
+        if (!$kunjungan->pembayaran || $kunjungan->pembayaran->status_pembayaran !== 'lunas') {
+            return back()->with('error', 'Nota hanya dapat dilihat setelah pembayaran lunas.');
+        }
+
         return view('pasiens.nota', compact('kunjungan'));
     }
 
@@ -278,6 +283,56 @@ class PasienController extends Controller
         $kunjungan->delete();
 
         return back()->with('success', 'Pengajuan kunjungan berhasil dibatalkan.');
+    }
+
+    /**
+     * Pasien mengkonfirmasi perubahan jadwal dari dokter
+     */
+    public function konfirmasiJadwal(Kunjungan $kunjungan)
+    {
+        // 1. Security Check: Pastikan kunjungan ini milik pasien yang login
+        if ($kunjungan->pasien->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak berhak mengkonfirmasi jadwal ini.');
+        }
+
+        // 2. Cek status harus pending_konfirmasi
+        if ($kunjungan->status !== 'pending_konfirmasi') {
+            return back()->with('error', 'Kunjungan ini tidak memerlukan konfirmasi.');
+        }
+
+        // 3. Update status menjadi disetujui dan hapus waktu lama
+        $kunjungan->update([
+            'status' => 'disetujui',
+            'waktu_kunjungan_lama' => null,
+        ]);
+
+        return back()->with('success', 'Jadwal baru berhasil dikonfirmasi. Silakan datang sesuai jadwal yang telah ditentukan.');
+    }
+
+    /**
+     * Pasien menolak perubahan jadwal dari dokter (batalkan kunjungan)
+     */
+    public function batalkanJadwal(Kunjungan $kunjungan)
+    {
+        // 1. Security Check: Pastikan kunjungan ini milik pasien yang login
+        if ($kunjungan->pasien->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak berhak membatalkan jadwal ini.');
+        }
+
+        // 2. Cek status harus pending_konfirmasi
+        if ($kunjungan->status !== 'pending_konfirmasi') {
+            return back()->with('error', 'Kunjungan ini tidak dapat dibatalkan.');
+        }
+
+        // 3. Update status menjadi batal
+        $kunjungan->update([
+            'status' => 'batal',
+            'dokter_id' => null,
+            'waktu_kunjungan' => null,
+            'waktu_kunjungan_lama' => null,
+        ]);
+
+        return back()->with('success', 'Kunjungan telah dibatalkan karena Anda tidak dapat hadir pada jadwal baru.');
     }
 
     /**

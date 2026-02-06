@@ -62,14 +62,38 @@
                                 </svg>
                                 Pilih Dokter yang Akan Dibantu
                             </h3>
-                            <p class="text-sm text-gray-500 mb-4">Centang dokter yang akan dibantu oleh perawat ini. Bisa dipilih lebih dari satu.</p>
+                            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                                <p class="text-sm text-amber-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Perawat hanya dapat membantu <strong>1 dokter</strong>. Pilih satu dokter di bawah ini.
+                                </p>
+                            </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Opsi tidak memilih dokter -->
+                                <label class="flex items-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-violet-300 hover:bg-violet-50 cursor-pointer transition-all group {{ !$perawat->dokter_id ? 'border-violet-500 bg-violet-50' : '' }}">
+                                    <input type="radio" name="dokter_id" value="" 
+                                        {{ !$perawat->dokter_id ? 'checked' : '' }}
+                                        class="w-5 h-5 border-gray-300 text-violet-600 focus:ring-violet-500">
+                                    <div class="ml-4 flex items-center flex-1">
+                                        <div class="w-12 h-12 rounded-xl bg-gray-300 flex items-center justify-center text-gray-500 font-bold text-lg">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="font-semibold text-gray-500 group-hover:text-violet-600 transition">Tidak ada dokter</p>
+                                            <p class="text-sm text-gray-400">Dapat ditugaskan nanti</p>
+                                        </div>
+                                    </div>
+                                </label>
                                 @foreach($dokters as $dokter)
-                                    <label class="flex items-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-violet-300 hover:bg-violet-50 cursor-pointer transition-all group {{ in_array($dokter->id, $assignedDokterIds) ? 'border-violet-500 bg-violet-50' : '' }}">
-                                        <input type="checkbox" name="dokter_ids[]" value="{{ $dokter->id }}" 
-                                            {{ in_array($dokter->id, $assignedDokterIds) ? 'checked' : '' }}
-                                            class="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500">
+                                    <label class="flex items-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-violet-300 hover:bg-violet-50 cursor-pointer transition-all group {{ $perawat->dokter_id == $dokter->id ? 'border-violet-500 bg-violet-50' : '' }}">
+                                        <input type="radio" name="dokter_id" value="{{ $dokter->id }}" 
+                                            {{ $perawat->dokter_id == $dokter->id ? 'checked' : '' }}
+                                            class="w-5 h-5 border-gray-300 text-violet-600 focus:ring-violet-500">
                                         <div class="ml-4 flex items-center flex-1">
                                             @if($dokter->foto)
                                                 <img src="{{ asset('storage/' . $dokter->foto) }}" alt="Foto" class="w-12 h-12 rounded-xl object-cover border-2 border-violet-200">

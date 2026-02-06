@@ -40,13 +40,21 @@
                         @php
                             $statusStyles = [
                                 'menunggu' => 'bg-amber-400',
+                                'pending_konfirmasi' => 'bg-orange-500',
                                 'disetujui' => 'bg-blue-400',
                                 'selesai' => 'bg-emerald-400',
                                 'batal' => 'bg-red-400',
                             ];
+                            $statusLabels = [
+                                'menunggu' => 'Menunggu',
+                                'pending_konfirmasi' => 'Pending Konfirmasi',
+                                'disetujui' => 'Disetujui',
+                                'selesai' => 'Selesai',
+                                'batal' => 'Batal',
+                            ];
                         @endphp
-                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold {{ $statusStyles[$kunjungan->status] }} text-white">
-                            {{ ucfirst($kunjungan->status) }}
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold {{ $statusStyles[$kunjungan->status] ?? 'bg-gray-400' }} text-white">
+                            {{ $statusLabels[$kunjungan->status] ?? ucfirst($kunjungan->status) }}
                         </span>
                     </div>
                 </div>

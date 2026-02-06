@@ -40,7 +40,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-emerald-100 text-sm font-medium">Sudah Ditugaskan</p>
-                            <p class="text-3xl font-bold mt-1">{{ $perawats->filter(fn($p) => $p->dokters->count() > 0)->count() }}</p>
+                            <p class="text-3xl font-bold mt-1">{{ $perawats->filter(fn($p) => $p->dokter_id !== null)->count() }}</p>
                         </div>
                         <div class="bg-white/20 p-3 rounded-xl">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-amber-100 text-sm font-medium">Belum Ditugaskan</p>
-                            <p class="text-3xl font-bold mt-1">{{ $perawats->filter(fn($p) => $p->dokters->count() == 0)->count() }}</p>
+                            <p class="text-3xl font-bold mt-1">{{ $perawats->filter(fn($p) => $p->dokter_id === null)->count() }}</p>
                         </div>
                         <div class="bg-white/20 p-3 rounded-xl">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,15 +177,21 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="flex flex-wrap gap-1">
-                                                @forelse($perawat->dokters as $dokter)
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-700">
-                                                        Dr. {{ Str::limit($dokter->user->name ?? '-', 15) }}
-                                                    </span>
-                                                @empty
-                                                    <span class="text-xs text-gray-400 italic">Belum ditugaskan</span>
-                                                @endforelse
-                                            </div>
+                                            @if($perawat->dokter)
+                                                <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-pink-100 text-pink-700 border border-pink-200">
+                                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    Dr. {{ $perawat->dokter->user->name ?? '-' }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                                                    <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                                    </svg>
+                                                    Belum ditugaskan
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
                                             <div class="flex items-center justify-center space-x-2">

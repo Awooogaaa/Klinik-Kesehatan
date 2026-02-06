@@ -20,20 +20,19 @@ class Perawat extends Model
     }
 
     /**
-     * Relasi many-to-many ke Dokter yang dibantu.
+     * Relasi ke Dokter yang dibantu (one-to-many: 1 perawat hanya bisa bantu 1 dokter).
      */
-    public function dokters()
+    public function dokter()
     {
-        return $this->belongsToMany(Dokter::class, 'dokter_perawat')
-                    ->withTimestamps();
+        return $this->belongsTo(Dokter::class, 'dokter_id');
     }
 
     /**
      * Cek apakah perawat ini membantu dokter tertentu.
      */
-    public function membantudokter($dokterId): bool
+    public function membantuDokter($dokterId): bool
     {
-        return $this->dokters()->where('dokter_id', $dokterId)->exists();
+        return $this->dokter_id === (int) $dokterId;
     }
 
     /**
@@ -42,7 +41,7 @@ class Perawat extends Model
      */
     public function bisaAksesKunjungan($kunjungan): bool
     {
-        return $this->dokters()->where('dokter_id', $kunjungan->dokter_id)->exists();
+        return $this->dokter_id === $kunjungan->dokter_id;
     }
 
     /**
@@ -50,7 +49,9 @@ class Perawat extends Model
      */
     public function kunjungansDapatDiakses()
     {
-        $dokterIds = $this->dokters()->pluck('dokters.id');
-        return \App\Models\Kunjungan::whereIn('dokter_id', $dokterIds);
+        if (!$this->dokter_id) {
+            return \App\Models\Kunjungan::whereRaw('1 = 0'); // Tidak ada akses
+        }
+        return \App\Models\Kunjungan::where('dokter_id', $this->dokter_id);
     }
 }

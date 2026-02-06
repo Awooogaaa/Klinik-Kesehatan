@@ -117,13 +117,30 @@
                                 </div>
                                 Penugasan Dokter (Opsional)
                             </h3>
-                            <p class="text-sm text-gray-500 mb-4">Pilih dokter yang akan dibantu oleh perawat ini. Bisa dipilih lebih dari satu.</p>
+                            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                                <p class="text-sm text-amber-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Perawat hanya dapat membantu <strong>1 dokter</strong>. Pilih satu dokter di bawah ini.
+                                </p>
+                            </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Opsi tidak memilih dokter -->
+                                <label class="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-pink-300 hover:bg-pink-50 cursor-pointer transition-all group">
+                                    <input type="radio" name="dokter_id" value="" 
+                                        {{ old('dokter_id') === null ? 'checked' : '' }}
+                                        class="w-5 h-5 border-gray-300 text-pink-600 focus:ring-pink-500">
+                                    <div class="ml-3">
+                                        <p class="font-medium text-gray-500 group-hover:text-pink-600 transition">Tidak memilih dokter</p>
+                                        <p class="text-xs text-gray-400">Dapat ditugaskan nanti</p>
+                                    </div>
+                                </label>
                                 @foreach($dokters as $dokter)
                                     <label class="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-pink-300 hover:bg-pink-50 cursor-pointer transition-all group">
-                                        <input type="checkbox" name="dokter_ids[]" value="{{ $dokter->id }}" 
-                                            {{ in_array($dokter->id, old('dokter_ids', [])) ? 'checked' : '' }}
-                                            class="w-5 h-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
+                                        <input type="radio" name="dokter_id" value="{{ $dokter->id }}" 
+                                            {{ old('dokter_id') == $dokter->id ? 'checked' : '' }}
+                                            class="w-5 h-5 border-gray-300 text-pink-600 focus:ring-pink-500">
                                         <div class="ml-3">
                                             <p class="font-medium text-gray-900 group-hover:text-pink-600 transition">Dr. {{ $dokter->user->name ?? '-' }}</p>
                                             <p class="text-xs text-gray-500">{{ $dokter->spesialisasi }}</p>

@@ -137,6 +137,10 @@ Route::middleware(['auth', 'role:pasien'])->group(function () {
     Route::post('/landingpage-pasien/kunjungan', [PasienController::class, 'storeKunjungan'])->name('pasiens.storeKunjungan');
     Route::delete('/landingpage-pasien/kunjungan/{kunjungan}', [PasienController::class, 'destroyKunjungan'])->name('pasiens.destroyKunjungan');
     Route::get('/landingpage-pasien/nota/{id}', [PasienController::class, 'nota'])->name('pasiens.nota');
+    
+    // Routes untuk konfirmasi/batalkan perubahan jadwal dari dokter
+    Route::post('/landingpage-pasien/kunjungan/{kunjungan}/konfirmasi', [PasienController::class, 'konfirmasiJadwal'])->name('pasiens.konfirmasiJadwal');
+    Route::post('/landingpage-pasien/kunjungan/{kunjungan}/batalkan-jadwal', [PasienController::class, 'batalkanJadwal'])->name('pasiens.batalkanJadwal');
 });
 
 // --- GROUP KHUSUS ADMIN ---

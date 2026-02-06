@@ -26,26 +26,33 @@ class PerawatController extends Controller
             abort(404, 'Data perawat tidak ditemukan.');
         }
         
-        $perawat->load('dokters.user');
+        $perawat->load('dokter.user');
         
-        // Statistik
-        $dokterIds = $perawat->dokters->pluck('id');
-        $totalRekamMedisHariIni = \App\Models\RekamMedis::whereIn('dokter_id', $dokterIds)
-            ->whereDate('created_at', today())
-            ->count();
+        // Statistik - hanya untuk dokter yang dibantu
+        $dokterId = $perawat->dokter_id;
         
-        $totalKunjunganMenunggu = \App\Models\Kunjungan::whereIn('dokter_id', $dokterIds)
-            ->where('status', 'menunggu')
-            ->count();
+        $totalRekamMedisHariIni = 0;
+        $totalKunjunganMenunggu = 0;
+        $kunjungansPerluInput = collect();
         
-        // Kunjungan yang perlu diinput rekam medisnya
-        $kunjungansPerluInput = \App\Models\Kunjungan::with(['pasien', 'dokter.user'])
-            ->whereIn('dokter_id', $dokterIds)
-            ->where('status', 'selesai')
-            ->whereDoesntHave('rekamMedis')
-            ->latest()
-            ->take(10)
-            ->get();
+        if ($dokterId) {
+            $totalRekamMedisHariIni = \App\Models\RekamMedis::where('dokter_id', $dokterId)
+                ->whereDate('created_at', today())
+                ->count();
+            
+            $totalKunjunganMenunggu = \App\Models\Kunjungan::where('dokter_id', $dokterId)
+                ->where('status', 'menunggu')
+                ->count();
+            
+            // Kunjungan yang perlu diinput rekam medisnya
+            $kunjungansPerluInput = \App\Models\Kunjungan::with(['pasien', 'dokter.user'])
+                ->where('dokter_id', $dokterId)
+                ->where('status', 'selesai')
+                ->whereDoesntHave('rekamMedis')
+                ->latest()
+                ->take(10)
+                ->get();
+        }
         
         return view('perawat-dashboard', compact('perawat', 'totalRekamMedisHariIni', 'totalKunjunganMenunggu', 'kunjungansPerluInput'));
     }
@@ -55,7 +62,7 @@ class PerawatController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Perawat::with(['user', 'dokters.user']);
+        $query = Perawat::with(['user', 'dokter.user']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -89,8 +96,7 @@ class PerawatController extends Controller
             'no_telepon' => ['required', 'string', 'max:20'],
             'alamat' => ['nullable', 'string'],
             'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
-            'dokter_ids' => ['nullable', 'array'],
-            'dokter_ids.*' => ['exists:dokters,id'],
+            'dokter_id' => ['nullable', 'exists:dokters,id'], // Single dokter, bukan array
         ]);
 
         DB::transaction(function () use ($request) {
@@ -108,17 +114,13 @@ class PerawatController extends Controller
                 'role' => 'perawat',
             ]);
 
-            // Simpan Data Profil Perawat
-            $perawat = $user->perawat()->create([
+            // Simpan Data Profil Perawat dengan dokter_id langsung
+            $user->perawat()->create([
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
                 'foto' => $fotoPath,
+                'dokter_id' => $request->dokter_id,
             ]);
-
-            // Assign Dokter yang dibantu
-            if ($request->has('dokter_ids')) {
-                $perawat->dokters()->sync($request->dokter_ids);
-            }
         });
 
         return redirect()->route('perawats.index')->with('success', 'Perawat berhasil ditambahkan.');
@@ -129,7 +131,7 @@ class PerawatController extends Controller
      */
     public function show(Perawat $perawat)
     {
-        $perawat->load(['user', 'dokters.user']);
+        $perawat->load(['user', 'dokter.user']);
         return view('perawats.show', compact('perawat'));
     }
 
@@ -138,10 +140,9 @@ class PerawatController extends Controller
      */
     public function edit(Perawat $perawat)
     {
-        $perawat->load(['user', 'dokters']);
+        $perawat->load(['user', 'dokter']);
         $dokters = Dokter::with('user')->get();
-        $assignedDokterIds = $perawat->dokters->pluck('id')->toArray();
-        return view('perawats.edit', compact('perawat', 'dokters', 'assignedDokterIds'));
+        return view('perawats.edit', compact('perawat', 'dokters'));
     }
 
     /**
@@ -156,8 +157,7 @@ class PerawatController extends Controller
             'alamat' => ['nullable', 'string'],
             'password' => ['nullable', 'confirmed', ValidationRules\Password::defaults()],
             'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
-            'dokter_ids' => ['nullable', 'array'],
-            'dokter_ids.*' => ['exists:dokters,id'],
+            'dokter_id' => ['nullable', 'exists:dokters,id'], // Single dokter
         ]);
 
         DB::transaction(function () use ($request, $perawat) {
@@ -177,6 +177,7 @@ class PerawatController extends Controller
             $perawatData = [
                 'no_telepon' => $request->no_telepon,
                 'alamat' => $request->alamat,
+                'dokter_id' => $request->dokter_id, // Update dokter_id langsung
             ];
 
             // Handle Ganti Foto
@@ -188,9 +189,6 @@ class PerawatController extends Controller
             }
 
             $perawat->update($perawatData);
-
-            // Update Dokter yang dibantu
-            $perawat->dokters()->sync($request->dokter_ids ?? []);
         });
 
         return redirect()->route('perawats.index')->with('success', 'Data perawat diperbarui.');
@@ -215,10 +213,9 @@ class PerawatController extends Controller
      */
     public function assignForm(Perawat $perawat)
     {
-        $perawat->load('dokters');
+        $perawat->load('dokter');
         $dokters = Dokter::with('user')->get();
-        $assignedDokterIds = $perawat->dokters->pluck('id')->toArray();
-        return view('perawats.assign', compact('perawat', 'dokters', 'assignedDokterIds'));
+        return view('perawats.assign', compact('perawat', 'dokters'));
     }
 
     /**
@@ -227,11 +224,10 @@ class PerawatController extends Controller
     public function assign(Request $request, Perawat $perawat)
     {
         $request->validate([
-            'dokter_ids' => ['nullable', 'array'],
-            'dokter_ids.*' => ['exists:dokters,id'],
+            'dokter_id' => ['nullable', 'exists:dokters,id'], // Single dokter
         ]);
 
-        $perawat->dokters()->sync($request->dokter_ids ?? []);
+        $perawat->update(['dokter_id' => $request->dokter_id]);
 
         return redirect()->route('perawats.index')->with('success', 'Penugasan dokter berhasil diperbarui.');
     }

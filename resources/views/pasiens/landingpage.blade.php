@@ -461,7 +461,7 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
                             @forelse($riwayat as $kunjungan)
-                                <tr x-data="{ openJadwal: false, openRekam: false }" class="hover:bg-blue-50/50 transition duration-200 group riwayat-row">
+                                <tr x-data="{ openJadwal: false, openRekam: false, openKonfirmasi: false }" class="hover:bg-blue-50/50 transition duration-200 group riwayat-row">
                                     
                                     <td class="px-6 py-5 whitespace-nowrap">
                                         <div class="text-sm font-bold text-gray-900">{{ $kunjungan->created_at->format('d M Y') }}</div>
@@ -481,6 +481,10 @@
                                         @if ($kunjungan->status == 'menunggu')
                                             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border border-yellow-200 shadow-sm">
                                                 <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></span> Menunggu Konfirmasi
+                                            </span>
+                                        @elseif($kunjungan->status == 'pending_konfirmasi')
+                                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 border border-orange-200 shadow-sm">
+                                                <span class="w-2 h-2 bg-orange-500 rounded-full mr-2 animate-pulse"></span> Jadwal Diubah
                                             </span>
                                         @elseif($kunjungan->status == 'disetujui')
                                             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border border-blue-200 shadow-sm">
@@ -523,30 +527,11 @@
                                                         <a href="{{ route('pembayarans.show', $pembayaran->id) }}" class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-full shadow hover:shadow-lg transition-all">
                                                             Bayar Sekarang
                                                         </a>
-                                                        @if($kunjungan->rekamMedis)
-                                                        <a href="{{ route('pasiens.nota', $kunjungan->id) }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium underline flex items-center gap-1 mt-1">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                            </svg>
-                                                            Lihat Nota
-                                                        </a>
-                                                        @endif
+                                                        <span class="text-xs text-gray-400 italic">📋 Nota tersedia setelah pembayaran</span>
                                                     </div>
                                                 @endif
                                             @else
-                                                @if($kunjungan->rekamMedis)
-                                                <div class="flex flex-col items-center gap-2">
-                                                    <span class="text-xs text-gray-400 italic">Belum ditagih</span>
-                                                    <a href="{{ route('pasiens.nota', $kunjungan->id) }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium underline flex items-center gap-1">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                        Lihat Nota
-                                                    </a>
-                                                </div>
-                                                @else
-                                                <span class="text-xs text-gray-400 italic">Belum ditagih</span>
-                                                @endif
+                                                <span class="text-xs text-gray-400 italic">📋 Belum ditagih</span>
                                             @endif
                                         @else
                                             <span class="text-gray-300">-</span>
@@ -564,6 +549,106 @@
                                                     Batalkan
                                                 </button>
                                             </form>
+                                        @elseif($kunjungan->status == 'pending_konfirmasi')
+                                            <button x-on:click="openKonfirmasi = true" type="button" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                                Konfirmasi Jadwal
+                                            </button>
+
+                                            {{-- MODAL KONFIRMASI PERUBAHAN JADWAL --}}
+                                            <div x-show="openKonfirmasi" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 text-left">
+                                                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" x-on:click="openKonfirmasi = false"></div>
+                                                <div class="bg-white rounded-3xl shadow-2xl transform transition-all sm:w-full sm:max-w-md relative z-10 overflow-hidden">
+                                                    <div class="bg-gradient-to-r from-orange-500 to-amber-600 p-6 text-white text-center">
+                                                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                            </svg>
+                                                        </div>
+                                                        <h3 class="text-xl font-bold">Perubahan Jadwal</h3>
+                                                        <p class="text-orange-100 text-sm mt-1">Dokter mengubah jadwal kunjungan Anda</p>
+                                                    </div>
+                                                    <div class="p-6 space-y-4">
+                                                        <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                                                            <span class="text-gray-500 text-sm">Pasien</span>
+                                                            <span class="font-bold text-gray-900">{{ $kunjungan->pasien->nama }}</span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                                                            <span class="text-gray-500 text-sm">Dokter</span>
+                                                            <span class="font-bold text-blue-600">{{ $kunjungan->dokter->nama ?? ($kunjungan->dokter->user->name ?? 'Belum ditentukan') }}</span>
+                                                        </div>
+                                                        
+                                                        {{-- Jadwal Lama --}}
+                                                        <div class="bg-gradient-to-r from-red-50 to-rose-50 p-4 rounded-2xl border border-red-100">
+                                                            <p class="text-xs text-red-600 uppercase font-bold tracking-wider mb-1">
+                                                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                </svg>
+                                                                Jadwal Lama
+                                                            </p>
+                                                            <p class="text-lg font-bold text-red-800 line-through">
+                                                                {{ $kunjungan->waktu_kunjungan_lama ? \Carbon\Carbon::parse($kunjungan->waktu_kunjungan_lama)->translatedFormat('l, d F Y') : '-' }}
+                                                            </p>
+                                                            <p class="text-md font-semibold text-red-600">
+                                                                {{ $kunjungan->waktu_kunjungan_lama ? \Carbon\Carbon::parse($kunjungan->waktu_kunjungan_lama)->format('H:i') . ' WIB' : '' }}
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        {{-- Arrow --}}
+                                                        <div class="flex justify-center">
+                                                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                                            </svg>
+                                                        </div>
+                                                        
+                                                        {{-- Jadwal Baru --}}
+                                                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-100">
+                                                            <p class="text-xs text-green-600 uppercase font-bold tracking-wider mb-1">
+                                                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                </svg>
+                                                                Jadwal Baru
+                                                            </p>
+                                                            <p class="text-lg font-bold text-green-800">
+                                                                {{ $kunjungan->waktu_kunjungan ? \Carbon\Carbon::parse($kunjungan->waktu_kunjungan)->translatedFormat('l, d F Y') : '-' }}
+                                                            </p>
+                                                            <p class="text-md font-semibold text-green-600">
+                                                                {{ $kunjungan->waktu_kunjungan ? \Carbon\Carbon::parse($kunjungan->waktu_kunjungan)->format('H:i') . ' WIB' : '' }}
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        <div class="flex items-center justify-center gap-2 text-xs text-orange-600 bg-orange-50 p-3 rounded-xl border border-orange-100">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                            </svg>
+                                                            Apakah Anda bisa hadir pada jadwal baru?
+                                                        </div>
+                                                    </div>
+                                                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 space-y-3">
+                                                        <form action="{{ route('pasiens.konfirmasiJadwal', $kunjungan->id) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl text-sm font-bold text-white hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                </svg>
+                                                                Ya, Konfirmasi Jadwal Baru
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ route('pasiens.batalkanJadwal', $kunjungan->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan kunjungan ini?');">
+                                                            @csrf
+                                                            <button type="submit" class="w-full py-3 bg-white border-2 border-red-200 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-center gap-2">
+                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                </svg>
+                                                                Tidak Bisa, Batalkan Kunjungan
+                                                            </button>
+                                                        </form>
+                                                        <button type="button" class="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition" x-on:click="openKonfirmasi = false">Tutup</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @elseif($kunjungan->status == 'disetujui')
                                             <button x-on:click="openJadwal = true" type="button" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer">
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
