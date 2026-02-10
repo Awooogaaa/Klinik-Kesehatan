@@ -26,6 +26,11 @@ class Kunjungan extends Model
         return $this->belongsTo(Dokter::class);
     }
 
+    public function preferensiDokter()
+    {
+        return $this->belongsTo(Dokter::class, 'preferensi_dokter_id');
+    }
+
     public function rekamMedis()
     {
         return $this->hasOne(RekamMedis::class);

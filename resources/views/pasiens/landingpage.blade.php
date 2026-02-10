@@ -207,6 +207,129 @@
                                         placeholder="Contoh: Demam tinggi sejak semalam, pusing, mual..."></textarea>
                                     <p class="text-xs text-gray-400 mt-2 ml-1">💡 Jelaskan keluhan dengan detail agar dokter dapat mempersiapkan pemeriksaan dengan baik.</p>
                                 </div>
+
+                                {{-- Pilih Dokter Preferensi (Opsional) --}}
+                                {{-- Pilih Dokter Preferensi (Opsional) --}}
+                                <div x-data="{
+                                    open: false,
+                                    search: '',
+                                    selected: '',
+                                    selectedLabel: 'Tidak ada preferensi (dokter ditentukan klinik)',
+                                    dokters: [
+                                        @foreach ($dokters as $dokter)
+                                        { id: '{{ $dokter->id }}', name: '{{ addslashes($dokter->user->name ?? $dokter->nama) }}', spesialisasi: '{{ addslashes($dokter->spesialisasi ?? 'Dokter Umum') }}' },
+                                        @endforeach
+                                    ],
+                                    get filtered() {
+                                        if (!this.search) return this.dokters;
+                                        return this.dokters.filter(d => d.name.toLowerCase().includes(this.search.toLowerCase()) || d.spesialisasi.toLowerCase().includes(this.search.toLowerCase()));
+                                    },
+                                    selectDokter(id, label) {
+                                        this.selected = id;
+                                        this.selectedLabel = label;
+                                        this.open = false;
+                                        this.search = '';
+                                    },
+                                    reset() {
+                                        this.selected = '';
+                                        this.selectedLabel = 'Tidak ada preferensi (dokter ditentukan klinik)';
+                                        this.open = false;
+                                        this.search = '';
+                                    }
+                                }" class="relative">
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">
+                                        <span class="flex items-center">
+                                            <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            Ingin diperiksa oleh dokter siapa? <span class="text-gray-400 font-normal">(Opsional)</span>
+                                        </span>
+                                    </label>
+                                    <p class="text-xs text-gray-500 mb-3">📋 Pihak klinik dapat menyesuaikan dokter sesuai ketersediaan.</p>
+
+                                    <input type="hidden" name="preferensi_dokter_id" :value="selected">
+
+                                    {{-- Dropdown Trigger --}}
+                                    <button type="button" @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-2xl transition-all duration-200 bg-white text-left"
+                                        :class="open ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-gray-200 hover:border-gray-300'">
+                                        <span class="flex items-center gap-3">
+                                            <span class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                                :class="selected ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-gray-300'">
+                                                <template x-if="selected">
+                                                    <span x-text="selectedLabel.charAt(0).toUpperCase()"></span>
+                                                </template>
+                                                <template x-if="!selected">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    </svg>
+                                                </template>
+                                            </span>
+                                            <span>
+                                                <span class="block text-sm font-semibold text-gray-800" x-text="selectedLabel"></span>
+                                                <span class="block text-xs text-gray-400" x-show="!selected">Klik untuk memilih dokter</span>
+                                            </span>
+                                        </span>
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </button>
+
+                                    {{-- Dropdown Panel --}}
+                                    <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1"
+                                        @click.outside="open = false"
+                                        class="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+                                        
+                                        {{-- Search --}}
+                                        <div class="p-3 border-b border-gray-100">
+                                            <div class="relative">
+                                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                                </svg>
+                                                <input type="text" x-model="search" x-ref="searchInput" @keydown.escape="open = false" placeholder="Cari nama dokter..." 
+                                                    class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-emerald-200 focus:ring-2 transition-all">
+                                            </div>
+                                        </div>
+
+                                        <div class="max-h-56 overflow-y-auto">
+                                            {{-- Default: Tidak ada preferensi --}}
+                                            <button type="button" @click="reset()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                                :class="!selected ? 'bg-emerald-50' : ''">
+                                                <span class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </span>
+                                                <span>
+                                                    <span class="block text-sm font-medium text-gray-700">Tidak ada preferensi</span>
+                                                    <span class="block text-xs text-gray-400">Dokter ditentukan klinik</span>
+                                                </span>
+                                                <svg x-show="!selected" class="w-5 h-5 text-emerald-500 ml-auto flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </button>
+
+                                            {{-- Daftar Dokter --}}
+                                            <template x-for="dokter in filtered" :key="dokter.id">
+                                                <button type="button" @click="selectDokter(dokter.id, dokter.name + ' (' + dokter.spesialisasi + ')')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left border-t border-gray-50"
+                                                    :class="selected == dokter.id ? 'bg-emerald-50' : ''">
+                                                    <span class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0" x-text="dokter.name.charAt(0).toUpperCase()"></span>
+                                                    <span>
+                                                        <span class="block text-sm font-medium text-gray-800" x-text="dokter.name"></span>
+                                                        <span class="block text-xs text-emerald-600" x-text="dokter.spesialisasi"></span>
+                                                    </span>
+                                                    <svg x-show="selected == dokter.id" class="w-5 h-5 text-emerald-500 ml-auto flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                </button>
+                                            </template>
+
+                                            {{-- Empty state --}}
+                                            <div x-show="filtered.length === 0" class="px-4 py-6 text-center text-sm text-gray-400">
+                                                Dokter tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/30 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 text-lg">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

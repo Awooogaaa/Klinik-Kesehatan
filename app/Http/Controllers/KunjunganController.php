@@ -11,7 +11,7 @@ class KunjunganController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Kunjungan::with(['pasien', 'dokter.user']);
+        $query = Kunjungan::with(['pasien', 'dokter.user', 'preferensiDokter.user']);
 
         // Filter by logged-in dokter if user has dokter role
         $user = auth()->user();
@@ -105,6 +105,7 @@ class KunjunganController extends Controller
 
     public function edit(Kunjungan $kunjungan)
     {
+        $kunjungan->load('preferensiDokter.user');
         $pasiens = Pasien::orderBy('nama')->get();
         $dokters = Dokter::with('user')->get();
         $hasRekamMedis = $kunjungan->rekamMedis()->exists();

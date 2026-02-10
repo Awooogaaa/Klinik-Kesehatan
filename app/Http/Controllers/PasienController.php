@@ -143,10 +143,11 @@ class PasienController extends Controller
 
     public function storeKunjungan(Request $request)
     {
-        // 1. Validasi HANYA pasien_id dan keluhan (Dokter & Waktu dihapus)
+        // 1. Validasi pasien_id, keluhan, dan preferensi dokter (opsional)
         $request->validate([
             'pasien_id' => ['required', 'exists:pasiens,id'],
             'keluhan_awal' => ['required', 'string'],
+            'preferensi_dokter_id' => ['nullable', 'exists:dokters,id'],
         ]);
 
         // 2. Security Check
@@ -154,10 +155,11 @@ class PasienController extends Controller
                         ->where('user_id', Auth::id())
                         ->firstOrFail();
 
-        // 3. Simpan Kunjungan (dokter_id & waktu_kunjungan null dulu)
+        // 3. Simpan Kunjungan (dokter_id & waktu_kunjungan null dulu, preferensi_dokter_id dari pasien)
         Kunjungan::create([
             'pasien_id' => $pasien->id,
             'dokter_id' => null,          // Biarkan null, nanti Admin yang atur
+            'preferensi_dokter_id' => $request->preferensi_dokter_id, // Pilihan dokter dari pasien
             'waktu_kunjungan' => null,    // Biarkan null, nanti Admin yang atur jadwal
             'keluhan_awal' => $request->keluhan_awal,
             'status' => 'menunggu',       // Status awal menunggu konfirmasi admin
@@ -234,13 +236,16 @@ class PasienController extends Controller
         $keluargaCount = $keluarga->count();
         $maxKeluarga = 20;
 
+        // Daftar dokter untuk pilihan preferensi pasien
+        $dokters = Dokter::with('user')->get();
+
         // Eager Load diperbaiki: 'dokter.user' agar bisa ambil nama dari tabel users jika perlu
-        $riwayat = Kunjungan::with(['dokter.user', 'pasien', 'rekamMedis.tindakanMedis']) 
+        $riwayat = Kunjungan::with(['dokter.user', 'preferensiDokter.user', 'pasien', 'rekamMedis.tindakanMedis']) 
                     ->whereIn('pasien_id', $keluargaIds)
                     ->latest()
                     ->get();
 
-        return view('pasiens.landingpage', compact('keluarga', 'riwayat', 'hasDiriSendiri', 'keluargaCount', 'maxKeluarga'));
+        return view('pasiens.landingpage', compact('keluarga', 'riwayat', 'hasDiriSendiri', 'keluargaCount', 'maxKeluarga', 'dokters'));
     }
 
     public function nota($id)

@@ -225,6 +225,14 @@
                                         <td class="px-6 py-4">
                                             <div class="max-w-xs">
                                                 <p class="text-sm text-gray-700 truncate" title="{{ $visit->keluhan_awal }}">{{ Str::limit($visit->keluhan_awal, 40) }}</p>
+                                                @if($visit->preferensiDokter)
+                                                    <span class="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <svg class="w-3 h-3 mr-1 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                        </svg>
+                                                        Preferensi: {{ $visit->preferensiDokter->user->name ?? $visit->preferensiDokter->nama }}
+                                                    </span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">

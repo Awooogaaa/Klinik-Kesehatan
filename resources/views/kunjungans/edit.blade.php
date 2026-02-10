@@ -105,6 +105,35 @@
                         </div>
                     </div>
 
+                    {{-- Preferensi Dokter dari Pasien --}}
+                    @if($kunjungan->preferensiDokter)
+                    <div class="mb-8 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Preferensi Dokter dari Pasien</p>
+                                <p class="text-base font-bold text-gray-900 mt-0.5">{{ $kunjungan->preferensiDokter->user->name ?? $kunjungan->preferensiDokter->nama }}</p>
+                                @if($kunjungan->preferensiDokter->spesialisasi)
+                                    <p class="text-sm text-emerald-700">{{ $kunjungan->preferensiDokter->spesialisasi }}</p>
+                                @endif
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Pilihan Pasien
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-emerald-600 mt-3 ml-16">💡 Anda tetap bisa memilih dokter lain sesuai ketersediaan klinik.</p>
+                    </div>
+                    @endif
+
                     <form action="{{ route('kunjungans.update', $kunjungan) }}" method="POST" class="space-y-6"
                         x-data="{ 
                             selectedStatus: '{{ $kunjungan->status }}',
